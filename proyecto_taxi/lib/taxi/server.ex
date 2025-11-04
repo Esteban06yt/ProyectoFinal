@@ -29,7 +29,6 @@ defmodule Taxi.Server do
     |> Enum.map(fn id ->
       case Taxi.Trip.list_info(id) do
         %{"state" => :waiting} -> Taxi.Trip.list_info(id)
-        %__MODULE__{} -> nil
         m when is_map(m) -> if m["state"] == :waiting, do: m, else: nil
         _ -> nil
       end
@@ -37,7 +36,7 @@ defmodule Taxi.Server do
     |> Enum.reject(&is_nil/1)
   end
 
-  def accept_trip(caller, trip_id, driver) do
+  def accept_trip(_caller, trip_id, driver) do
     case Taxi.Trip.accept(trip_id, driver) do
       {:ok, _} ->
         {:ok, trip_id}
@@ -91,10 +90,10 @@ defmodule Taxi.Server do
         end
     end
   end
-end
 
-defp parse_role("client"), do: :client
-defp parse_role("cliente"), do: :client
-defp parse_role("driver"), do: :driver
-defp parse_role("conductor"), do: :driver
-defp parse_role(_), do: :client
+  defp parse_role("client"), do: :client
+  defp parse_role("cliente"), do: :client
+  defp parse_role("driver"), do: :driver
+  defp parse_role("conductor"), do: :driver
+  defp parse_role(_), do: :client
+end

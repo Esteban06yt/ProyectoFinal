@@ -1,7 +1,7 @@
 defmodule Taxi.CLI do
   @moduledoc """
   Módulo CLI para interactuar con el sistema.
-  Ejemplo de uso (en diferentes terminales con el mismo nodo o conectados al servidor):
+  Ejemplo de uso:
     Taxi.CLI.start()
   Comandos:
     connect username password [role]
@@ -35,7 +35,7 @@ defmodule Taxi.CLI do
 
   defp parse_and_exec("help", s) do
     IO.puts("""
-    Comandos:
+    Comandos disponibles:
       connect username password [role]
       disconnect
       request_trip origen=Parque destino=Centro
@@ -51,26 +51,49 @@ defmodule Taxi.CLI do
 
   defp parse_and_exec("quit", _s), do: :quit
 
-  defp parse_and_exec(cmd = <<"connect ", rest :: binary>>, _s) do
+  defp parse_and_exec(<<"connect ", rest::binary>>, _s) do
     parts = String.split(rest)
     case parts do
       [username, password] ->
-        {:ok, _} = do_connect(username, "cliente", password)
+        do_connect(username, "cliente", password)
       [username, password, role] ->
-        {:ok, _} = do_connect(username, role, password)
+        do_connect(username, role, password)
       _ ->
-        {:error, "connect necesita username password [role]", nil}
+        {:error, "Uso: connect username password [role]", nil}
     end
   end
 
-  defp parse_and_exec("disconnect", s) do
+  defp parse_and_exec("disconnect", _s) do
     caller = self()
     :ok = Taxi.Server.disconnect(caller)
-    IO.puts("Desconectado.")
+    IO.puts("Desconectado correctamente")
     {:ok, nil}
   end
 
-  defp parse_and_exec(cmd, s) when String.starts_with?(cmd, "request_trip ") do
+  defp parse_and_exec(cmd, s) do
+    cond do
+      String.starts_with?(cmd, "request_trip ") ->
+        handle_request_trip(cmd, s)
+
+      String.starts_with?(cmd, "accept_trip ") ->
+        handle_accept_trip(cmd, s)
+
+      cmd == "list_trips" ->
+        handle_list_trips(s)
+
+      cmd == "my_score" ->
+        handle_my_score(s)
+
+      cmd == "ranking" ->
+        handle_ranking(s)
+
+      true ->
+        IO.puts("Comando desconocido: #{cmd}")
+        {:ok, s}
+    end
+  end
+
+  defp handle_request_trip(cmd, s) do
     args = parse_kv_args(String.replace_prefix(cmd, "request_trip ", ""))
     case {Map.get(args, "origen"), Map.get(args, "destino")} do
       {nil, _} -> {:error, "Falta origen", s}
@@ -83,10 +106,6 @@ defmodule Taxi.CLI do
             {:ok, id} ->
               IO.puts("Viaje creado con id #{id}")
               {:ok, s}
-            {:error, :invalid_origin} ->
-              {:error, "Origen inválido", s}
-            {:error, :invalid_destination} ->
-              {:error, "Destino inválido", s}
             {:error, reason} ->
               {:error, "Error creando viaje: #{inspect(reason)}", s}
           end
@@ -94,7 +113,7 @@ defmodule Taxi.CLI do
     end
   end
 
-  defp parse_and_exec("list_trips", s) do
+  defp handle_list_trips(s) do
     trips = Taxi.Server.list_trips()
     if Enum.empty?(trips) do
       IO.puts("No hay viajes disponibles.")
@@ -106,7 +125,7 @@ defmodule Taxi.CLI do
     {:ok, s}
   end
 
-  defp parse_and_exec(cmd, s) when String.starts_with?(cmd, "accept_trip ") do
+  defp handle_accept_trip(cmd, s) do
     if s == nil do
       {:error, "No estás conectado. Usa connect", s}
     else
@@ -121,7 +140,7 @@ defmodule Taxi.CLI do
     end
   end
 
-  defp parse_and_exec("my_score", s) do
+  defp handle_my_score(s) do
     if s == nil do
       {:error, "No estás conectado.", s}
     else
@@ -131,14 +150,9 @@ defmodule Taxi.CLI do
     end
   end
 
-  defp parse_and_exec("ranking", s) do
+  defp handle_ranking(s) do
     r = Taxi.Server.ranking()
     Enum.each(r, fn u -> IO.puts("#{u.username} (#{u.role}) -> #{u.score}") end)
-    {:ok, s}
-  end
-
-  defp parse_and_exec(unknown, s) do
-    IO.puts("Comando desconocido: #{unknown}")
     {:ok, s}
   end
 
