@@ -3,9 +3,10 @@
               {optional_applications,[]},
               {applications,[kernel,stdlib,elixir,logger]},
               {description,"proyecto_taxi"},
-              {modules,['Elixir.Taxi.CLI','Elixir.Taxi.Location',
-                        'Elixir.Taxi.Server','Elixir.Taxi.Supervisor',
-                        'Elixir.Taxi.Trip','Elixir.Taxi.UserManager']},
+              {modules,['Elixir.Taxi.Application','Elixir.Taxi.CLI',
+                        'Elixir.Taxi.Location','Elixir.Taxi.Server',
+                        'Elixir.Taxi.Supervisor','Elixir.Taxi.Trip',
+                        'Elixir.Taxi.UserManager']},
               {registered,[]},
               {vsn,"0.1.0"},
               {mod,{'Elixir.Taxi.Application',[]}}]}.
