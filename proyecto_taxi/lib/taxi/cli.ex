@@ -195,21 +195,7 @@ defmodule Taxi.CLI do
 
   defp get_password(prompt) do
     IO.write(prompt)
-
-    password =
-      case :os.type() do
-        {:unix, _} ->
-          System.cmd("stty", ["-echo"])
-          pass = IO.gets("") |> String.trim()
-          System.cmd("stty", ["echo"])
-          IO.puts("")
-          pass
-
-        _ ->
-          IO.gets("") |> String.trim()
-      end
-
-    password
+    IO.gets("") |> String.trim()
   end
 
   defp parse_kv_args(str) do
