@@ -1,10 +1,10 @@
 defmodule Taxi.CLI do
   @moduledoc """
-  Módulo CLI para interactuar con el sistema.
-  Ejemplo de uso:
-    Taxi.CLI.start()
+  Interfaz de línea de comandos para el sistema Taxi.
+  Usa: Taxi.CLI.start()
+
   Comandos:
-    connect username [role]
+    connect
     disconnect
     request_trip origen=Parque destino=Centro
     list_trips
@@ -36,8 +36,8 @@ defmodule Taxi.CLI do
   defp parse_and_exec("help", s) do
     IO.puts("""
     Comandos disponibles:
-      connect username [role]
-      disconnect
+      connect               → iniciar sesión o crear cuenta
+      disconnect            → salir de la sesión actual
       request_trip origen=Parque destino=Centro
       list_trips
       accept_trip trip_id
@@ -51,47 +51,82 @@ defmodule Taxi.CLI do
 
   defp parse_and_exec("quit", _s), do: :quit
 
-  defp parse_and_exec(<<"connect ", rest::binary>>, _s) do
-    parts = String.split(rest)
-    case parts do
-      [username] ->
-        password = get_password()
-        do_connect(username, "cliente", password)
-      [username, role] ->
-        password = get_password()
-        do_connect(username, role, password)
+  defp parse_and_exec("connect", _s) do
+    IO.puts("¿Deseas iniciar sesión o crear una nueva cuenta?")
+    IO.puts("1. Iniciar sesión")
+    IO.puts("2. Crear cuenta")
+    opcion = IO.gets("> ") |> String.trim()
+
+    case opcion do
+      "1" ->
+        do_login()
+
+      "2" ->
+        do_register()
+
       _ ->
-        {:error, "Uso: connect username [role]", nil}
+        IO.puts("Opción no válida, usa 1 o 2")
+        {:ok, nil}
     end
   end
 
   defp parse_and_exec("disconnect", _s) do
     caller = self()
     :ok = Taxi.Server.disconnect(caller)
-    IO.puts("Desconectado correctamente")
+    IO.puts("Desconectado correctamente.")
     {:ok, nil}
   end
 
   defp parse_and_exec(cmd, s) do
     cond do
-      String.starts_with?(cmd, "request_trip ") ->
-        handle_request_trip(cmd, s)
-
-      String.starts_with?(cmd, "accept_trip ") ->
-        handle_accept_trip(cmd, s)
-
-      cmd == "list_trips" ->
-        handle_list_trips(s)
-
-      cmd == "my_score" ->
-        handle_my_score(s)
-
-      cmd == "ranking" ->
-        handle_ranking(s)
-
+      String.starts_with?(cmd, "request_trip ") -> handle_request_trip(cmd, s)
+      String.starts_with?(cmd, "accept_trip ") -> handle_accept_trip(cmd, s)
+      cmd == "list_trips" -> handle_list_trips(s)
+      cmd == "my_score" -> handle_my_score(s)
+      cmd == "ranking" -> handle_ranking(s)
       true ->
         IO.puts("Comando desconocido: #{cmd}")
         {:ok, s}
+    end
+  end
+
+  defp do_login do
+    username = IO.gets("Nombre de usuario: ") |> String.trim()
+    password = get_password("Contraseña: ")
+
+    case Taxi.Server.connect(self(), username, "cliente", password) do
+      {:ok, user} ->
+        IO.puts("Bienvenido de nuevo, #{user}")
+        {:ok, username}
+
+      {:error, :invalid_password} ->
+        IO.puts("Contraseña incorrecta.")
+        {:ok, nil}
+    end
+  end
+
+  defp do_register do
+    username = IO.gets("Elige un nombre de usuario: ") |> String.trim()
+    password = get_password("Crea una contraseña: ")
+
+    IO.puts("Selecciona tu rol:")
+    IO.puts("1. Cliente")
+    IO.puts("2. Conductor")
+    role =
+      case IO.gets("> ") |> String.trim() do
+        "1" -> "cliente"
+        "2" -> "conductor"
+        _ -> "cliente"
+      end
+
+    case Taxi.Server.connect(self(), username, role, password) do
+      {:ok, user} ->
+        IO.puts("Cuenta creada y conectada como #{user}")
+        {:ok, username}
+
+      {:error, :invalid_password} ->
+        IO.puts("Ya existe una cuenta con ese nombre y la contraseña no coincide.")
+        {:ok, nil}
     end
   end
 
@@ -106,7 +141,7 @@ defmodule Taxi.CLI do
         else
           case Taxi.Server.request_trip(self(), s, o, d) do
             {:ok, id} ->
-              IO.puts("Viaje creado con id #{id}")
+              IO.puts("Viaje creado con ID #{id}")
               {:ok, s}
             {:error, reason} ->
               {:error, "Error creando viaje: #{inspect(reason)}", s}
@@ -118,10 +153,10 @@ defmodule Taxi.CLI do
   defp handle_list_trips(s) do
     trips = Taxi.Server.list_trips()
     if Enum.empty?(trips) do
-      IO.puts("No hay viajes disponibles.")
+      IO.puts("No hay viajes disponibles")
     else
       Enum.each(trips, fn t ->
-        IO.puts("id=#{t["id"]} cliente=#{t["client"]} #{t["origin"]}->#{t["destination"]}")
+        IO.puts("id=#{t["id"]} | cliente=#{t["client"]} | #{t["origin"]}->#{t["destination"]}")
       end)
     end
     {:ok, s}
@@ -129,7 +164,7 @@ defmodule Taxi.CLI do
 
   defp handle_accept_trip(cmd, s) do
     if s == nil do
-      {:error, "No estás conectado. Usa connect", s}
+      {:error, "No estás conectado.", s}
     else
       trip_id = String.trim(String.replace_prefix(cmd, "accept_trip ", ""))
       case Taxi.Server.accept_trip(self(), trip_id, s) do
@@ -154,23 +189,11 @@ defmodule Taxi.CLI do
 
   defp handle_ranking(s) do
     r = Taxi.Server.ranking()
-    Enum.each(r, fn u -> IO.puts("#{u.username} (#{u.role}) -> #{u.score}") end)
+    Enum.each(r, fn u -> IO.puts("#{u.username} (#{u.role}) → #{u.score}") end)
     {:ok, s}
   end
 
-  defp do_connect(username, role, password) do
-    caller = self()
-    case Taxi.Server.connect(caller, username, role, password) do
-      {:ok, user} ->
-        IO.puts("Conectado como #{user}")
-        {:ok, username}
-      {:error, :invalid_password} ->
-        IO.puts("Contraseña incorrecta")
-        {:ok, nil}
-    end
-  end
-
-  defp get_password(prompt \\ "Introduce tu contraseña: ") do
+  defp get_password(prompt \\ "Contraseña: ") do
     IO.write(prompt)
 
     password =

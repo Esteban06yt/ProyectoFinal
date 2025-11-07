@@ -10,10 +10,14 @@ Para ejecutar el cliente
     iex --sname cliente1 -S mix
         Node.connect(:"server@Esteban06yt")
         Taxi.CLI.start()
-            connect Esteban06yt pass123 cliente
+            connect
+            1
+            Esteban06yt
+            pass123
 
     cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
     iex --sname conductor1 -S mix
         Node.connect(:"server@Esteban06yt")
         Taxi.CLI.start()
-            connect Felipe pass321 conductor
+            connect
+            2
