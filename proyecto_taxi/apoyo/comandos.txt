@@ -3,6 +3,7 @@ Para ejecutar el server (en mi caso):
     mix deps.get
     mix compile
     iex --sname server -S mix
+        Application.ensure_all_started(:proyecto_taxi)
         Taxi.CLI.start()
 
 Para ejecutar el cliente
