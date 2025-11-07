@@ -4,7 +4,7 @@ defmodule Taxi.CLI do
   Ejemplo de uso:
     Taxi.CLI.start()
   Comandos:
-    connect username password [role]
+    connect username [role]
     disconnect
     request_trip origen=Parque destino=Centro
     list_trips
@@ -36,7 +36,7 @@ defmodule Taxi.CLI do
   defp parse_and_exec("help", s) do
     IO.puts("""
     Comandos disponibles:
-      connect username password [role]
+      connect username [role]
       disconnect
       request_trip origen=Parque destino=Centro
       list_trips
@@ -54,12 +54,14 @@ defmodule Taxi.CLI do
   defp parse_and_exec(<<"connect ", rest::binary>>, _s) do
     parts = String.split(rest)
     case parts do
-      [username, password] ->
+      [username] ->
+        password = get_password()
         do_connect(username, "cliente", password)
-      [username, password, role] ->
+      [username, role] ->
+        password = get_password()
         do_connect(username, role, password)
       _ ->
-        {:error, "Uso: connect username password [role]", nil}
+        {:error, "Uso: connect username [role]", nil}
     end
   end
 
@@ -166,6 +168,25 @@ defmodule Taxi.CLI do
         IO.puts("Contraseña incorrecta")
         {:ok, nil}
     end
+  end
+
+  defp get_password(prompt \\ "Introduce tu contraseña: ") do
+    IO.write(prompt)
+
+    password =
+      case :os.type() do
+        {:unix, _} ->
+          System.cmd("stty", ["-echo"])
+          pass = IO.gets("") |> String.trim()
+          System.cmd("stty", ["echo"])
+          IO.puts("")
+          pass
+
+        _ ->
+          IO.gets("") |> String.trim()
+      end
+
+    password
   end
 
   defp parse_kv_args(str) do
