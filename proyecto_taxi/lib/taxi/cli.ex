@@ -193,7 +193,7 @@ defmodule Taxi.CLI do
     {:ok, s}
   end
 
-  defp get_password(prompt \\ "Contraseña: ") do
+  defp get_password(prompt) do
     IO.write(prompt)
 
     password =
