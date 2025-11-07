@@ -20,4 +20,6 @@ Para ejecutar el cliente
         Node.connect(:"server@Esteban06yt")
         Taxi.CLI.start()
             connect
-            2
+            1
+            Jaider
+            contrasenia
