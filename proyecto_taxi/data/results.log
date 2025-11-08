@@ -1,3 +1,4 @@
 2025-11-08 03:05:48.865000Z; cliente=Esteban06yt; conductor=none; origen=Parque; destino=Centro; status=Expirado
 2025-11-08 03:29:07.106000Z; cliente=Esteban06yt; conductor=none; origen=Parque; destino=Hospital; status=Expirado
 2025-11-08 03:53:35.829000Z; cliente=Esteban06yt; conductor=none; origen=Aeropuerto; destino=Centro; status=Expirado
+2025-11-08 06:20:40.420000Z; cliente=Esteban06yt; conductor=Jaider; origen=Aeropuerto; destino=Centro; status=Completado

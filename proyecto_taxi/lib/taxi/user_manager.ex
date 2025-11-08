@@ -32,6 +32,13 @@ defmodule Taxi.UserManager do
     GenServer.call(__MODULE__, {:get_role, username})
   end
 
+  def get_user_role_safe(username) do
+    case GenServer.call(__MODULE__, {:get_role, username}) do
+      nil -> :client
+      role -> role
+    end
+  end
+
   def handle_call({:auth_or_reg, username, role, password}, _from, users) do
     case Map.get(users, username) do
       nil ->

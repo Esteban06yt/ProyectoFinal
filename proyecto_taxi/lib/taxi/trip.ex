@@ -61,6 +61,8 @@ defmodule Taxi.Trip do
     if s.timer_ref, do: Process.cancel_timer(s.timer_ref)
     ref = Process.send_after(self(), :finish, @trip_duration)
     s2 = %{s | driver: driver, state: :in_progress, timer_ref: ref}
+
+    Logger.info("Viaje #{s2.id} aceptado por #{driver}, finalizará en #{@trip_duration}ms")
     {:reply, {:ok, s2.id}, s2}
   end
 
@@ -69,16 +71,38 @@ defmodule Taxi.Trip do
   end
 
   def handle_info(:expire, s = %__MODULE__{state: :waiting}) do
+    Logger.warning("Viaje #{s.id} expiró sin conductor")
     write_result("#{DateTime.utc_now()}; cliente=#{s.client}; conductor=none; origen=#{s.origin}; destino=#{s.destination}; status=Expirado\n")
     Taxi.UserManager.add_score(s.client, -5)
     {:stop, :normal, %{s | state: :expired}}
   end
 
+  def handle_info(:expire, s = %__MODULE__{state: :in_progress}) do
+    Logger.debug("Ignorando mensaje :expire tardío para viaje #{s.id} (ya está en progreso)")
+    {:noreply, s}
+  end
+
+  def handle_info(:expire, s) do
+    Logger.debug("Ignorando mensaje :expire para viaje #{s.id} en estado #{s.state}")
+    {:noreply, s}
+  end
+
   def handle_info(:finish, s = %__MODULE__{state: :in_progress, driver: driver}) do
+    Logger.info("Viaje #{s.id} completado exitosamente")
     write_result("#{DateTime.utc_now()}; cliente=#{s.client}; conductor=#{driver}; origen=#{s.origin}; destino=#{s.destination}; status=Completado\n")
     Taxi.UserManager.add_score(s.client, 10)
     Taxi.UserManager.add_score(driver, 15)
     {:stop, :normal, %{s | state: :completed}}
+  end
+
+  def handle_info(:finish, s) do
+    Logger.debug("Ignorando mensaje :finish para viaje #{s.id} en estado #{s.state}")
+    {:noreply, s}
+  end
+
+  def handle_info(msg, s) do
+    Logger.warning("Mensaje inesperado en Trip #{s.id}: #{inspect(msg)}")
+    {:noreply, s}
   end
 
   defp write_result(line) do

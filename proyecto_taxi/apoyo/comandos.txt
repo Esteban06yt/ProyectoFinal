@@ -24,6 +24,7 @@ connect
 Jaider
 contrasenia
 list_trips
+accept_trip
 
 TODO
     Usar :crypto para hash (p. ej. :crypto.hash(:sha256, password) |> Base.encode16()) o una librería especializada.
