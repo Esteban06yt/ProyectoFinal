@@ -6,9 +6,9 @@ defmodule Taxi.CLI do
   Comandos:
     connect
     disconnect
-    request_trip origen=Parque destino=Centro
+    request_trip origen=Parque destino=Centro  (solo clientes)
     list_trips
-    accept_trip trip_id
+    accept_trip trip_id                         (solo conductores)
     my_score
     ranking
     help
@@ -38,9 +38,9 @@ defmodule Taxi.CLI do
     Comandos disponibles:
       connect               → iniciar sesión o crear cuenta
       disconnect            → salir de la sesión actual
-      request_trip origen=Parque destino=Centro
+      request_trip origen=Parque destino=Centro  (solo clientes)
       list_trips
-      accept_trip trip_id
+      accept_trip trip_id                         (solo conductores)
       my_score
       ranking
       help
@@ -131,22 +131,27 @@ defmodule Taxi.CLI do
   end
 
   defp handle_request_trip(cmd, s) do
-    args = parse_kv_args(String.replace_prefix(cmd, "request_trip ", ""))
-    case {Map.get(args, "origen"), Map.get(args, "destino")} do
-      {nil, _} -> {:error, "Falta origen", s}
-      {_, nil} -> {:error, "Falta destino", s}
-      {o, d} ->
-        if s == nil do
-          {:error, "No estás conectado. Usa connect", s}
-        else
-          case Taxi.Server.request_trip(self(), s, o, d) do
-            {:ok, id} ->
-              IO.puts("Viaje creado con ID #{id}")
-              {:ok, s}
-            {:error, reason} ->
-              {:error, "Error creando viaje: #{inspect(reason)}", s}
-          end
+    if s == nil do
+      {:error, "No estás conectado. Usa connect", s}
+    else
+      user_role = get_user_role(s)
+      if user_role != :client do
+        {:error, "Solo los clientes pueden solicitar viajes. Tu rol es: #{user_role}", s}
+      else
+        args = parse_kv_args(String.replace_prefix(cmd, "request_trip ", ""))
+        case {Map.get(args, "origen"), Map.get(args, "destino")} do
+          {nil, _} -> {:error, "Falta origen", s}
+          {_, nil} -> {:error, "Falta destino", s}
+          {o, d} ->
+            case Taxi.Server.request_trip(self(), s, o, d) do
+              {:ok, id} ->
+                IO.puts("Viaje creado con ID #{id}")
+                {:ok, s}
+              {:error, reason} ->
+                {:error, "Error creando viaje: #{inspect(reason)}", s}
+            end
         end
+      end
     end
   end
 
@@ -166,13 +171,18 @@ defmodule Taxi.CLI do
     if s == nil do
       {:error, "No estás conectado.", s}
     else
-      trip_id = String.trim(String.replace_prefix(cmd, "accept_trip ", ""))
-      case Taxi.Server.accept_trip(self(), trip_id, s) do
-        {:ok, id} ->
-          IO.puts("Aceptaste el viaje #{id}")
-          {:ok, s}
-        {:error, reason} ->
-          {:error, "No se pudo aceptar: #{inspect(reason)}", s}
+      user_role = get_user_role(s)
+      if user_role != :driver do
+        {:error, "Solo los conductores pueden aceptar viajes. Tu rol es: #{user_role}", s}
+      else
+        trip_id = String.trim(String.replace_prefix(cmd, "accept_trip ", ""))
+        case Taxi.Server.accept_trip(self(), trip_id, s) do
+          {:ok, id} ->
+            IO.puts("Aceptaste el viaje #{id}")
+            {:ok, s}
+          {:error, reason} ->
+            {:error, "No se pudo aceptar: #{inspect(reason)}", s}
+        end
       end
     end
   end
@@ -209,5 +219,9 @@ defmodule Taxi.CLI do
     end)
     |> Enum.reject(fn {k, _} -> k == nil end)
     |> Enum.into(%{})
+  end
+
+  defp get_user_role(username) do
+    Taxi.UserManager.get_user_role(username)
   end
 end

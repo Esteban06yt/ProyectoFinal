@@ -28,6 +28,10 @@ defmodule Taxi.UserManager do
     GenServer.call(__MODULE__, {:ranking, limit})
   end
 
+  def get_user_role(username) do
+    GenServer.call(__MODULE__, {:get_role, username})
+  end
+
   def handle_call({:auth_or_reg, username, role, password}, _from, users) do
     case Map.get(users, username) do
       nil ->
@@ -68,6 +72,15 @@ defmodule Taxi.UserManager do
       |> Enum.take(limit)
 
     {:reply, top, users}
+  end
+
+  def handle_call({:get_role, username}, _from, users) do
+    role =
+      case Map.get(users, username) do
+        nil -> nil
+        user -> user.role
+      end
+    {:reply, role, users}
   end
 
   defp persist_users(users_map) do

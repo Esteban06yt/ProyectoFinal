@@ -75,7 +75,7 @@ defmodule Taxi.Server do
 
           [{pid, _}] ->
             case :sys.get_state(pid) do
-              %{client: ^username, origin: ^origin, destination: ^destination, status: :pending} -> true
+              %{client: ^username, origin: ^origin, destination: ^destination, status: :waiting} -> true
               _ -> false
             end
           _ -> false
