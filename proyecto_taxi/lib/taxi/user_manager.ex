@@ -12,7 +12,6 @@ defmodule Taxi.UserManager do
     {:ok, users}
   end
 
-  # API
   def authenticate_or_register(username, role, password) do
     GenServer.call(__MODULE__, {:auth_or_reg, username, role, password})
   end

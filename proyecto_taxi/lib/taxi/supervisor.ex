@@ -7,6 +7,7 @@ defmodule Taxi.Supervisor do
 
   def init(:ok) do
     children = [
+      {Registry, keys: :unique, name: Taxi.TripRegistry},
       {Taxi.UserManager, []},
       {Taxi.Location, []},
       {Taxi.Server, []},

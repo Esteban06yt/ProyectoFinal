@@ -1,26 +1,33 @@
-Para ejecutar el server (en mi caso):
-    cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
-    mix deps.get
-    mix compile
-    iex --sname server -S mix
-        Application.ensure_all_started(:proyecto_taxi)
-        Taxi.CLI.start()
+cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
+mix deps.get
+mix compile
+iex --sname server -S mix
+Application.ensure_all_started(:proyecto_taxi)
+Taxi.CLI.start()
 
-Para ejecutar el cliente
-    cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
-    iex --sname cliente1 -S mix
-        Node.connect(:"server@Esteban06yt")
-        Taxi.CLI.start()
-            connect
-            1
-            Esteban06yt
-            pass123
+cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
+iex --sname cliente1 -S mix
+Node.connect(:"server@Esteban06yt")
+Taxi.CLI.start()
+connect
+1
+Esteban06yt
+pass123
+request_trip origen=Aeropuerto destino=Centro
 
-    cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
-    iex --sname conductor1 -S mix
-        Node.connect(:"server@Esteban06yt")
-        Taxi.CLI.start()
-            connect
-            1
-            Jaider
-            contrasenia
+cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
+iex --sname conductor1 -S mix
+Node.connect(:"server@Esteban06yt")
+Taxi.CLI.start()
+connect
+1
+Jaider
+contrasenia
+list_trips
+
+TODO
+    Usar :crypto para hash (p. ej. :crypto.hash(:sha256, password) |> Base.encode16()) o una librería especializada.
+    Solucionar request_trip
+    Agregar mas destinos
+    Puntaje separado para ranking de clientes y conductores
+    Hacer que funcione en nodos remotos

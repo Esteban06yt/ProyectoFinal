@@ -13,6 +13,15 @@ defmodule Taxi.Trip do
 
   def via_tuple(id), do: {:via, Registry, {Taxi.TripRegistry, id}}
 
+  def child_spec(args) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, [args]},
+      restart: :temporary,
+      type: :worker
+    }
+  end
+
   def init(%{id: id, client: client, origin: origin, destination: destination}) do
     state = %__MODULE__{
       id: id,
@@ -29,7 +38,15 @@ defmodule Taxi.Trip do
   end
 
   def list_info(id) do
-    GenServer.call(via_tuple(id), :info)
+    s = GenServer.call(via_tuple(id), :info)
+    %{
+      "id" => Map.get(s, :id),
+      "client" => Map.get(s, :client),
+      "origin" => Map.get(s, :origin),
+      "destination" => Map.get(s, :destination),
+      "driver" => Map.get(s, :driver),
+      "state" => Map.get(s, :state)
+    }
   end
 
   def accept(id, driver) do
@@ -52,13 +69,13 @@ defmodule Taxi.Trip do
   end
 
   def handle_info(:expire, s = %__MODULE__{state: :waiting}) do
-    write_result("#{Date.utc_today()}; cliente=#{s.client}; conductor=none; origen=#{s.origin}; destino=#{s.destination}; status=Expirado\n")
+    write_result("#{DateTime.utc_now()}; cliente=#{s.client}; conductor=none; origen=#{s.origin}; destino=#{s.destination}; status=Expirado\n")
     Taxi.UserManager.add_score(s.client, -5)
     {:stop, :normal, %{s | state: :expired}}
   end
 
   def handle_info(:finish, s = %__MODULE__{state: :in_progress, driver: driver}) do
-    write_result("#{Date.utc_today()}; cliente=#{s.client}; conductor=#{driver}; origen=#{s.origin}; destino=#{s.destination}; status=Completado\n")
+    write_result("#{DateTime.utc_now()}; cliente=#{s.client}; conductor=#{driver}; origen=#{s.origin}; destino=#{s.destination}; status=Completado\n")
     Taxi.UserManager.add_score(s.client, 10)
     Taxi.UserManager.add_score(driver, 15)
     {:stop, :normal, %{s | state: :completed}}

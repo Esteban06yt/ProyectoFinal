@@ -94,7 +94,7 @@ defmodule Taxi.CLI do
     username = IO.gets("Nombre de usuario: ") |> String.trim()
     password = get_password("Contraseña: ")
 
-    case Taxi.Server.connect(self(), username, "cliente", password) do
+    case Taxi.Server.connect(self(), username, nil, password) do
       {:ok, user} ->
         IO.puts("Bienvenido de nuevo, #{user}")
         {:ok, username}

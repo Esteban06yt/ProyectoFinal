@@ -7,7 +7,6 @@ defmodule Taxi.Server do
   end
 
   def init(state) do
-    Registry.start_link(keys: :unique, name: Taxi.TripRegistry)
     {:ok, state}
   end
 
@@ -26,14 +25,8 @@ defmodule Taxi.Server do
 
   def list_trips() do
     Registry.select(Taxi.TripRegistry, [{{:"$1", :_, :_}, [], [:"$1"]}])
-    |> Enum.map(fn id ->
-      case Taxi.Trip.list_info(id) do
-        %{"state" => :waiting} -> Taxi.Trip.list_info(id)
-        m when is_map(m) -> if m["state"] == :waiting, do: m, else: nil
-        _ -> nil
-      end
-    end)
-    |> Enum.reject(&is_nil/1)
+    |> Enum.map(&Taxi.Trip.list_info/1)
+    |> Enum.filter(fn m -> m["state"] == :waiting end)
   end
 
   def accept_trip(_caller, trip_id, driver) do
@@ -77,13 +70,25 @@ defmodule Taxi.Server do
 
       not Taxi.Location.valid_location?(destination) ->
         {:reply, {:error, :invalid_destination}, state}
+      Enum.any?(state.trips, fn id ->
+        case Registry.lookup(Taxi.TripRegistry, id) do
 
+          [{pid, _}] ->
+            case :sys.get_state(pid) do
+              %{client: ^username, origin: ^origin, destination: ^destination, status: :pending} -> true
+              _ -> false
+            end
+          _ -> false
+        end
+      end) ->
+        {:reply, {:error, :trip_already_exists}, state}
       true ->
         id = :erlang.unique_integer([:positive]) |> Integer.to_string()
         args = %{id: id, client: username, origin: origin, destination: destination}
         spec = {Taxi.Trip, args}
         case DynamicSupervisor.start_child(Taxi.TripSupervisor, spec) do
-          {:ok, _pid} ->
+          {:ok, pid} ->
+            Process.send_after(pid, :expire, 30_000)
             {:reply, {:ok, id}, %{state | trips: MapSet.put(state.trips, id)}}
           {:error, reason} ->
             {:reply, {:error, reason}, state}
