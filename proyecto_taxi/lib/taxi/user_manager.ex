@@ -106,10 +106,11 @@ defmodule Taxi.UserManager do
         content
         |> String.split("\n", trim: true)
         |> Enum.reduce(%{}, fn line, acc ->
+          line = String.trim(line)
           case String.split(line, ",") do
             [username, role_s, password, score_s] ->
               role = String.to_atom(role_s)
-              score = String.to_integer(score_s)
+              score = String.to_integer(String.trim(score_s))
               Map.put(acc, username, %{username: username, role: role, password: password, score: score})
 
             _ -> acc

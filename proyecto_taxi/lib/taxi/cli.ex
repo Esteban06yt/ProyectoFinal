@@ -1,15 +1,4 @@
 defmodule Taxi.CLI do
-  @moduledoc """
-  Uso:
-    Terminal 1 (Servidor):
-      iex --sname server -S mix
-      Taxi.CLI.start()
-    Terminal 2 (Cliente):
-      iex --sname cliente1 -S mix
-      Node.connect(:"server@Esteban06yt")
-      Taxi.CLI.start()
-  """
-
   def start do
     server_node = detect_server_node()
     case server_node do
