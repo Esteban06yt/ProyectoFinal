@@ -8,3 +8,8 @@
 2025-11-09 03:02:51.872000Z; cliente=Fernely; conductor=none; origen=Hospital; destino=Centro; status=Expirado
 2025-11-09 05:18:29.539000Z; cliente=Esteban06yt; conductor=Jaider; origen=Aeropuerto; destino=Centro; status=Completado
 2025-11-09 05:20:30.093000Z; cliente=Esteban06yt; conductor=Jaider; origen=Aeropuerto; destino=Hospital; status=Completado
+2025-11-09 06:29:11.729000Z; cliente=Esteban06yt; conductor=Jaider; origen=Aeropuerto; destino=Centro; status=Completado
+2025-11-09 06:29:19.602000Z; cliente=Esteban06yt; conductor=Jaider; origen=Aeropuerto; destino=Centro; status=Completado
+2025-11-09 06:29:28.084000Z; cliente=Esteban06yt; conductor=Jaider; origen=Aeropuerto; destino=Centro; status=Completado (Conductor: +20pts con bono)
+2025-11-09 06:29:37.049000Z; cliente=Esteban06yt; conductor=Jaider; origen=Aeropuerto; destino=Centro; status=Completado (Conductor: +20pts con bono)
+2025-11-09 06:29:49.536000Z; cliente=Esteban06yt; conductor=Jaider; origen=Aeropuerto; destino=Centro; status=Completado (Conductor: +25pts con bono)

@@ -20,6 +20,18 @@ defmodule Taxi.UserManager do
     GenServer.call(__MODULE__, {:add_score, username, delta})
   end
 
+  def increment_streak(username) do
+    GenServer.call(__MODULE__, {:increment_streak, username})
+  end
+
+  def reset_streak(username) do
+    GenServer.call(__MODULE__, {:reset_streak, username})
+  end
+
+  def get_streak(username) do
+    GenServer.call(__MODULE__, {:get_streak, username})
+  end
+
   def get_score(username) do
     GenServer.call(__MODULE__, {:get_score, username})
   end
@@ -46,7 +58,7 @@ defmodule Taxi.UserManager do
   def handle_call({:auth_or_reg, username, role, password}, _from, users) do
     case Map.get(users, username) do
       nil ->
-        user = %{username: username, role: role, password: password, score: 0}
+        user = %{username: username, role: role, password: password, score: 0, streak: 0}
         users2 = Map.put(users, username, user)
         persist_users(users2)
         {:reply, {:ok, user}, users2}
@@ -68,6 +80,55 @@ defmodule Taxi.UserManager do
 
     persist_users(users2)
     {:reply, :ok, users2}
+  end
+
+  def handle_call({:increment_streak, username}, _from, users) do
+    {bonus, users2} =
+      case Map.get(users, username) do
+        nil ->
+          {0, users}
+        user ->
+          new_streak = user.streak + 1
+          bonus = calculate_bonus(new_streak)
+
+          updated_user = user
+            |> Map.put(:streak, new_streak)
+            |> Map.update!(:score, &(&1 + bonus))
+
+          {bonus, Map.put(users, username, updated_user)}
+      end
+
+    persist_users(users2)
+    {:reply, {:ok, bonus}, users2}
+  end
+
+  def handle_call({:reset_streak, username}, _from, users) do
+    users2 =
+      update_in(users, [username], fn
+        nil -> nil
+        u -> Map.put(u, :streak, 0)
+      end)
+
+    persist_users(users2)
+    {:reply, :ok, users2}
+  end
+
+  def handle_call({:get_streak, username}, _from, users) do
+    streak =
+      case Map.get(users, username) do
+        nil -> 0
+        user -> Map.get(user, :streak, 0)
+      end
+    {:reply, streak, users}
+  end
+
+  def handle_call({:get_streak, username}, _from, users) do
+    streak =
+      case Map.get(users, username) do
+        nil -> 0
+        user -> Map.get(user, :streak, 0)
+      end
+    {:reply, streak, users}
   end
 
   def handle_call({:get_score, username}, _from, users) do
@@ -105,11 +166,23 @@ defmodule Taxi.UserManager do
     {:reply, role, users}
   end
 
+  defp calculate_bonus(streak) do
+    cond do
+      streak >= 10 -> 25
+      streak >= 5 -> 10
+      streak >= 3 -> 5
+      true -> 0
+    end
+  end
+
   defp persist_users(users_map) do
     lines =
       users_map
       |> Map.values()
-      |> Enum.map(fn u -> "#{u.username},#{u.role},#{u.password},#{u.score}\n" end)
+      |> Enum.map(fn u ->
+        streak = Map.get(u, :streak, 0)
+        "#{u.username},#{u.role},#{u.password},#{u.score},#{streak}\n"
+      end)
       |> Enum.join()
 
     File.write!(@users_file, lines)
@@ -122,11 +195,18 @@ defmodule Taxi.UserManager do
         |> String.split("\n", trim: true)
         |> Enum.reduce(%{}, fn line, acc ->
           line = String.trim(line)
+
           case String.split(line, ",") do
             [username, role_s, password, score_s] ->
               role = String.to_atom(role_s)
               score = String.to_integer(String.trim(score_s))
-              Map.put(acc, username, %{username: username, role: role, password: password, score: score})
+              Map.put(acc, username, %{username: username, role: role, password: password, score: score, streak: 0})
+
+            [username, role_s, password, score_s, streak_s] ->
+              role = String.to_atom(role_s)
+              score = String.to_integer(String.trim(score_s))
+              streak = String.to_integer(String.trim(streak_s))
+              Map.put(acc, username, %{username: username, role: role, password: password, score: score, streak: streak})
 
             _ -> acc
           end

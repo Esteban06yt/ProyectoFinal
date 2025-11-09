@@ -23,7 +23,6 @@ connect
 1
 Jaider
 holotwist
-list_trips
 accept_trip
 
 cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
@@ -37,5 +36,11 @@ akeno
 accept_trip
 
 TODO
-    Agregar mas destinos
     Hacer que funcione en nodos remotos
+    un solo viaje a la vez
+         warning: this clause cannot match because a previous clause at line 116 matches the same pattern as this clause
+     │
+ 125 │   def handle_call({:get_streak, username}, _from, users) do
+     │   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     │
+     └─ lib/taxi/user_manager.ex:125

@@ -45,6 +45,7 @@ defmodule Taxi.Trip do
   def init(%{id: id, client: client, origin: origin, destination: destination}) do
     ref = make_ref()
     Process.send_after(self(), {:expire, ref}, @accept_timeout)
+
     state = %__MODULE__{
       id: id,
       client: client,
@@ -100,9 +101,32 @@ defmodule Taxi.Trip do
 
   def handle_info({:finish, ref}, s = %__MODULE__{state: :in_progress, timer_ref: ref, driver: driver}) do
     Logger.info("Viaje #{s.id} completado exitosamente")
-    write_result("#{DateTime.utc_now()}; cliente=#{s.client}; conductor=#{driver}; origen=#{s.origin}; destino=#{s.destination}; status=Completado\n")
+
     Taxi.UserManager.add_score(s.client, 10)
     Taxi.UserManager.add_score(driver, 15)
+
+    {:ok, bonus} = Taxi.UserManager.increment_streak(driver)
+
+    bonus_msg = case bonus do
+      25 -> "¡RACHA DE 10 VIAJES! +25 pts de bono"
+      10 -> "¡Racha de 5 viajes! +10 pts de bono"
+      5 -> "¡Racha de 3 viajes! +5 pts de bono"
+      _ -> ""
+    end
+
+    total_driver_points = 15 + bonus
+    status_line = if bonus > 0 do
+      "Completado (Conductor: +#{total_driver_points}pts con bono)"
+    else
+      "Completado"
+    end
+
+    write_result("#{DateTime.utc_now()}; cliente=#{s.client}; conductor=#{driver}; origen=#{s.origin}; destino=#{s.destination}; status=#{status_line}\n")
+
+    if bonus > 0 do
+      Logger.info("#{bonus_msg} - Total para #{driver}: +#{total_driver_points} pts")
+    end
+
     {:stop, :normal, %{s | state: :completed}}
   end
 

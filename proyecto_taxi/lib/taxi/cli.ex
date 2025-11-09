@@ -97,14 +97,14 @@ defmodule Taxi.CLI do
       cmd == "ranking" ->
         handle_ranking(s, server_node)
 
-      cmd == "locations" ->
-        handle_locations(s, server_node)
-
       cmd == "ranking_clients" ->
         handle_ranking_by_role(s, server_node, :client)
 
       cmd == "ranking_drivers" ->
         handle_ranking_by_role(s, server_node, :driver)
+
+      cmd == "locations" ->
+        handle_locations(s, server_node)
 
       true ->
         IO.puts("Comando desconocido: #{cmd}")
@@ -242,8 +242,24 @@ defmodule Taxi.CLI do
     if s == nil do
       {:error, "No estás conectado.", s}
     else
-      score = call_server(server_node, Taxi.Server, :my_score, [s])
-      IO.puts("Puntaje de #{s}: #{score}")
+      score = call_server(server_node, Taxi.UserManager, :get_score, [s])
+      streak = call_server(server_node, Taxi.UserManager, :get_streak, [s])
+      role = call_server(server_node, Taxi.UserManager, :get_user_role, [s])
+
+      IO.puts("\nTu estadística:")
+      IO.puts("Puntaje: #{score} pts")
+
+      if role == :driver and streak > 0 do
+        next_bonus = cond do
+          streak >= 10 -> "¡Máxima racha! Sigue así"
+          streak >= 5 -> "Próximo bono en #{10 - streak} viajes (25 pts)"
+          streak >= 3 -> "Próximo bono en #{5 - streak} viajes (10 pts)"
+          true -> "Próximo bono en #{3 - streak} viajes (5 pts)"
+        end
+        IO.puts("Racha actual: #{streak} viajes consecutivos")
+        IO.puts("#{next_bonus}")
+      end
+
       {:ok, s}
     end
   end
