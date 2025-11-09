@@ -16,6 +16,10 @@ defmodule Taxi.Location do
     GenServer.call(__MODULE__, {:valid, loc})
   end
 
+  def normalize_location(loc) do
+    GenServer.call(__MODULE__, {:normalize, loc})
+  end
+
   def list_locations do
     GenServer.call(__MODULE__, :list)
   end
@@ -41,7 +45,15 @@ defmodule Taxi.Location do
   end
 
   def handle_call({:valid, loc}, _from, locations) do
-    {:reply, loc in locations, locations}
+    normalized = String.downcase(loc)
+    found = Enum.any?(locations, fn l -> String.downcase(l) == normalized end)
+    {:reply, found, locations}
+  end
+
+  def handle_call({:normalize, loc}, _from, locations) do
+    normalized = String.downcase(loc)
+    result = Enum.find(locations, fn l -> String.downcase(l) == normalized end)
+    {:reply, result || loc, locations}
   end
 
   def handle_call(:list, _from, locations) do

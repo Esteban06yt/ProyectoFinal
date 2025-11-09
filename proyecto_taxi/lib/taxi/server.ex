@@ -76,6 +76,9 @@ defmodule Taxi.Server do
   end
 
   def handle_call({:request_trip, _caller, username, origin, destination}, _from, state) do
+    norm_origin = Taxi.Location.normalize_location(origin)
+    norm_destination = Taxi.Location.normalize_location(destination)
+
     cond do
       not Taxi.Location.valid_location?(origin) ->
         {:reply, {:error, :invalid_origin}, state}
@@ -83,15 +86,15 @@ defmodule Taxi.Server do
       not Taxi.Location.valid_location?(destination) ->
         {:reply, {:error, :invalid_destination}, state}
 
-      origin == destination ->
+      String.downcase(norm_origin) == String.downcase(norm_destination) ->
         {:reply, {:error, :same_origin_destination}, state}
 
-      trip_exists?(username, origin, destination) ->
+      trip_exists?(username, norm_origin, norm_destination) ->
         {:reply, {:error, :trip_already_exists}, state}
 
       true ->
         id = :erlang.unique_integer([:positive]) |> Integer.to_string()
-        args = %{id: id, client: username, origin: origin, destination: destination}
+        args = %{id: id, client: username, origin: norm_origin, destination: norm_destination}
         spec = {Taxi.Trip, args}
 
         case DynamicSupervisor.start_child(Taxi.TripSupervisor, spec) do
