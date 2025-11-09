@@ -28,6 +28,10 @@ defmodule Taxi.UserManager do
     GenServer.call(__MODULE__, {:ranking, limit})
   end
 
+  def ranking_by_role(role, limit \\ 10) do
+    GenServer.call(__MODULE__, {:ranking_by_role, role, limit})
+  end
+
   def get_user_role(username) do
     GenServer.call(__MODULE__, {:get_role, username})
   end
@@ -67,7 +71,7 @@ defmodule Taxi.UserManager do
   end
 
   def handle_call({:get_score, username}, _from, users) do
-    score = users |> Map.get(username) |> (fn u -> if u, do: u.score, else: nil end).()
+    score = users |> Map.get(username) |> (fn u -> if u, do: u.score, else: 0 end).()
     {:reply, score, users}
   end
 
@@ -75,6 +79,17 @@ defmodule Taxi.UserManager do
     top =
       users
       |> Map.values()
+      |> Enum.sort_by(& &1.score, :desc)
+      |> Enum.take(limit)
+
+    {:reply, top, users}
+  end
+
+  def handle_call({:ranking_by_role, role, limit}, _from, users) do
+    top =
+      users
+      |> Map.values()
+      |> Enum.filter(fn u -> u.role == role end)
       |> Enum.sort_by(& &1.score, :desc)
       |> Enum.take(limit)
 

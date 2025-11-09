@@ -12,7 +12,7 @@ Taxi.CLI.start()
 connect
 1
 Esteban06yt
-pass123
+Esteban06yt
 request_trip origen=Aeropuerto destino=Centro
 
 cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
@@ -22,7 +22,7 @@ Taxi.CLI.start()
 connect
 1
 Jaider
-contrasenia
+holotwist
 list_trips
 accept_trip
 

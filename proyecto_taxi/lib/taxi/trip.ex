@@ -22,22 +22,6 @@ defmodule Taxi.Trip do
     }
   end
 
-  def init(%{id: id, client: client, origin: origin, destination: destination}) do
-    ref = make_ref()
-    Process.send_after(self(), {:expire, ref}, @accept_timeout)
-    state = %__MODULE__{
-      id: id,
-      client: client,
-      origin: origin,
-      destination: destination,
-      driver: nil,
-      state: :waiting,
-      timer_ref: ref
-    }
-
-    {:ok, state}
-  end
-
   def list_info(id) do
     s = GenServer.call(via_tuple(id), :info)
     %{
@@ -52,6 +36,26 @@ defmodule Taxi.Trip do
 
   def accept(id, driver) do
     GenServer.call(via_tuple(id), {:accept, driver})
+  end
+
+  def cancel(id, username) do
+    GenServer.call(via_tuple(id), {:cancel, username})
+  end
+
+  def init(%{id: id, client: client, origin: origin, destination: destination}) do
+    ref = make_ref()
+    Process.send_after(self(), {:expire, ref}, @accept_timeout)
+    state = %__MODULE__{
+      id: id,
+      client: client,
+      origin: origin,
+      destination: destination,
+      driver: nil,
+      state: :waiting,
+      timer_ref: ref
+    }
+
+    {:ok, state}
   end
 
   def handle_call(:info, _from, s) do
@@ -69,6 +73,17 @@ defmodule Taxi.Trip do
 
   def handle_call({:accept, _driver}, _from, s) do
     {:reply, {:error, :not_available}, s}
+  end
+
+  def handle_call({:cancel, username}, _from, s = %__MODULE__{state: :waiting, client: username}) do
+    Logger.info("Viaje #{s.id} cancelado por el cliente")
+    write_result("#{DateTime.utc_now()}; cliente=#{s.client}; conductor=none; origen=#{s.origin}; destino=#{s.destination}; status=Cancelado\n")
+    Taxi.UserManager.add_score(s.client, -3)
+    {:stop, :normal, {:ok, :cancelled}, %{s | state: :cancelled}}
+  end
+
+  def handle_call({:cancel, _}, _from, s) do
+    {:reply, {:error, :cannot_cancel}, s}
   end
 
   def handle_info({:expire, ref}, s = %__MODULE__{state: :waiting, timer_ref: ref}) do
@@ -104,20 +119,5 @@ defmodule Taxi.Trip do
   defp write_result(line) do
     File.mkdir_p!("data")
     File.write!("data/results.log", line, [:append])
-  end
-
-  def cancel(id, username) do
-    GenServer.call(via_tuple(id), {:cancel, username})
-  end
-
-  def handle_call({:cancel, username}, _from, s = %__MODULE__{state: :waiting, client: username}) do
-    Logger.info("Viaje #{s.id} cancelado por el cliente")
-    write_result("#{DateTime.utc_now()}; cliente=#{s.client}; conductor=none; origen=#{s.origin}; destino=#{s.destination}; status=Cancelado\n")
-    Taxi.UserManager.add_score(s.client, -3)
-    {:stop, :normal, {:ok, :cancelled}, %{s | state: :cancelled}}
-  end
-
-  def handle_call({:cancel, _}, _from, s) do
-    {:reply, {:error, :cannot_cancel}, s}
   end
 end

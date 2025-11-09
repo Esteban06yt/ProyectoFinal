@@ -23,6 +23,10 @@ defmodule Taxi.Server do
     GenServer.call(__MODULE__, {:request_trip, caller, username, origin, destination})
   end
 
+  def cancel_trip(trip_id, username) do
+    GenServer.call(__MODULE__, {:cancel_trip, trip_id, username})
+  end
+
   def list_trips() do
     Registry.select(Taxi.TripRegistry, [{{:"$1", :_, :_}, [], [:"$1"]}])
     |> Enum.map(&Taxi.Trip.list_info/1)
@@ -39,12 +43,20 @@ defmodule Taxi.Server do
     end
   end
 
+  def my_trips(username) do
+    GenServer.call(__MODULE__, {:my_trips, username})
+  end
+
   def my_score(username) do
     Taxi.UserManager.get_score(username)
   end
 
   def ranking() do
     Taxi.UserManager.ranking(20)
+  end
+
+  def ranking_by_role(role) do
+    Taxi.UserManager.ranking_by_role(role, 20)
   end
 
   def handle_call({:connect, caller, username, role, password}, _from, state) do
@@ -91,6 +103,31 @@ defmodule Taxi.Server do
     end
   end
 
+  def handle_call({:cancel_trip, trip_id, username}, _from, state) do
+    case Taxi.Trip.cancel(trip_id, username) do
+      {:ok, :cancelled} ->
+        {:reply, {:ok, trip_id}, state}
+      {:error, reason} ->
+        {:reply, {:error, reason}, state}
+    end
+  end
+
+  def handle_call({:my_trips, username}, _from, state) do
+    trips = Registry.select(Taxi.TripRegistry, [{{:"$1", :_, :_}, [], [:"$1"]}])
+    |> Enum.map(fn id ->
+      try do
+        Taxi.Trip.list_info(id)
+      rescue
+        _ -> nil
+      end
+    end)
+    |> Enum.reject(&is_nil/1)
+    |> Enum.filter(fn t ->
+      t["client"] == username or t["driver"] == username
+    end)
+    {:reply, trips, state}
+  end
+
   defp trip_exists?(username, origin, destination) do
     Registry.select(Taxi.TripRegistry, [{{:"$1", :_, :_}, [], [:"$1"]}])
     |> Enum.any?(fn id ->
@@ -104,32 +141,6 @@ defmodule Taxi.Server do
         _ -> false
       end
     end)
-  end
-
-  def cancel_trip(trip_id, username) do
-    GenServer.call(__MODULE__, {:cancel_trip, trip_id, username})
-  end
-
-  def handle_call({:cancel_trip, trip_id, username}, _from, state) do
-    case Taxi.Trip.cancel(trip_id, username) do
-      {:ok, :cancelled} ->
-        {:reply, {:ok, trip_id}, state}
-      {:error, reason} ->
-        {:reply, {:error, reason}, state}
-    end
-  end
-
-  def my_trips(username) do
-    GenServer.call(__MODULE__, {:my_trips, username})
-  end
-
-  def handle_call({:my_trips, username}, _from, state) do
-    trips = Registry.select(Taxi.TripRegistry, [{{:"$1", :_, :_}, [], [:"$1"]}])
-    |> Enum.map(&Taxi.Trip.list_info/1)
-    |> Enum.filter(fn t ->
-      t["client"] == username or t["driver"] == username
-    end)
-    {:reply, trips, state}
   end
 
   defp parse_role("client"), do: :client

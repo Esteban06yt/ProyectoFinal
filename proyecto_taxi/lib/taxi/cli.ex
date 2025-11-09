@@ -41,6 +41,8 @@ defmodule Taxi.CLI do
       accept_trip trip_id     (solo conductores)
       my_score                -> ver mi puntaje
       ranking                 -> ver ranking global
+      ranking_clients         -> ver ranking de clientes
+      ranking_drivers         -> ver ranking de conductores
       locations               -> ver ubicaciones disponibles
       help
       quit
@@ -76,20 +78,34 @@ defmodule Taxi.CLI do
     cond do
       String.starts_with?(cmd, "request_trip ") ->
         handle_request_trip(cmd, s, server_node)
+
       String.starts_with?(cmd, "cancel_trip ") ->
         handle_cancel_trip(cmd, s, server_node)
+
       String.starts_with?(cmd, "accept_trip ") ->
         handle_accept_trip(cmd, s, server_node)
+
       cmd == "list_trips" ->
         handle_list_trips(s, server_node)
+
       cmd == "my_trips" ->
         handle_my_trips(s, server_node)
+
       cmd == "my_score" ->
         handle_my_score(s, server_node)
+
       cmd == "ranking" ->
         handle_ranking(s, server_node)
+
       cmd == "locations" ->
         handle_locations(s, server_node)
+
+      cmd == "ranking_clients" ->
+        handle_ranking_by_role(s, server_node, :client)
+
+      cmd == "ranking_drivers" ->
+        handle_ranking_by_role(s, server_node, :driver)
+
       true ->
         IO.puts("Comando desconocido: #{cmd}")
         {:ok, s}
@@ -159,16 +175,22 @@ defmodule Taxi.CLI do
               {:ok, id} ->
                 IO.puts("Viaje creado con ID #{id}")
                 {:ok, s}
+
               {:error, :invalid_origin} ->
                 {:error, "El origen '#{o}' no es válido. Usa 'locations' para ver opciones", s}
+
               {:error, :invalid_destination} ->
                 {:error, "El destino '#{d}' no es válido", s}
+
               {:error, :same_origin_destination} ->
                 {:error, "El origen y destino no pueden ser iguales", s}
+
               {:error, :trip_already_exists} ->
                 {:error, "Ya tienes un viaje pendiente con ese origen/destino", s}
+
               {:error, reason} ->
                 {:error, "Error creando viaje: #{inspect(reason)}", s}
+
               {:badrpc, reason} ->
                 {:error, "Error de conexión: #{inspect(reason)}", s}
             end
@@ -233,7 +255,28 @@ defmodule Taxi.CLI do
         IO.puts("Error obteniendo ranking: #{inspect(reason)}")
       ranking when is_list(ranking) ->
         Enum.each(ranking, fn u ->
-          IO.puts("#{u.username} (#{u.role}) → #{u.score}")
+          IO.puts("#{u.username} (#{u.role}) -> #{u.score}")
+        end)
+    end
+    {:ok, s}
+  end
+
+  defp handle_ranking_by_role(s, server_node, role) do
+    r = call_server(server_node, Taxi.Server, :ranking_by_role, [role])
+    case r do
+      {:badrpc, reason} ->
+        IO.puts("Error obteniendo ranking: #{inspect(reason)}")
+      ranking when is_list(ranking) ->
+        title = if role == :client, do: "Ranking Clientes:", else: "Ranking Conductores:"
+        IO.puts("\n#{title}")
+        Enum.with_index(ranking, 1) |> Enum.each(fn {u, pos} ->
+          lugar = case pos do
+            1 -> "1st"
+            2 -> "2nd"
+            3 -> "3rd"
+            _ -> "#{pos}."
+          end
+          IO.puts("#{lugar} #{u.username} -> #{u.score} pts")
         end)
     end
     {:ok, s}
@@ -274,7 +317,7 @@ defmodule Taxi.CLI do
             _ -> "ok"
           end
           driver = t["driver"] || "esperando..."
-          IO.puts("#{status_icon} ID:#{t["id"]} | #{t["origin"]}→#{t["destination"]} | Conductor: #{driver}")
+          IO.puts("#{status_icon} ID:#{t["id"]} | #{t["origin"]}->#{t["destination"]} | Conductor: #{driver}")
         end)
       end
       {:ok, s}
