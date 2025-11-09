@@ -32,13 +32,16 @@ defmodule Taxi.CLI do
   defp parse_and_exec("help", s, _node) do
     IO.puts("""
     Comandos disponibles:
-      connect               → iniciar sesión o crear cuenta
-      disconnect            → salir de la sesión actual
+      connect                 -> iniciar sesión o crear cuenta
+      disconnect              -> salir de la sesión actual
       request_trip origen=Parque destino=Centro  (solo clientes)
-      list_trips
-      accept_trip trip_id                         (solo conductores)
-      my_score
-      ranking
+      cancel_trip trip_id     -> cancelar un viaje pendiente (-3 puntos)
+      list_trips              -> ver viajes disponibles
+      my_trips                -> ver mis viajes activos
+      accept_trip trip_id     (solo conductores)
+      my_score                -> ver mi puntaje
+      ranking                 -> ver ranking global
+      locations               -> ver ubicaciones disponibles
       help
       quit
     """)
@@ -71,11 +74,22 @@ defmodule Taxi.CLI do
 
   defp parse_and_exec(cmd, s, server_node) do
     cond do
-      String.starts_with?(cmd, "request_trip ") -> handle_request_trip(cmd, s, server_node)
-      String.starts_with?(cmd, "accept_trip ") -> handle_accept_trip(cmd, s, server_node)
-      cmd == "list_trips" -> handle_list_trips(s, server_node)
-      cmd == "my_score" -> handle_my_score(s, server_node)
-      cmd == "ranking" -> handle_ranking(s, server_node)
+      String.starts_with?(cmd, "request_trip ") ->
+        handle_request_trip(cmd, s, server_node)
+      String.starts_with?(cmd, "cancel_trip ") ->
+        handle_cancel_trip(cmd, s, server_node)
+      String.starts_with?(cmd, "accept_trip ") ->
+        handle_accept_trip(cmd, s, server_node)
+      cmd == "list_trips" ->
+        handle_list_trips(s, server_node)
+      cmd == "my_trips" ->
+        handle_my_trips(s, server_node)
+      cmd == "my_score" ->
+        handle_my_score(s, server_node)
+      cmd == "ranking" ->
+        handle_ranking(s, server_node)
+      cmd == "locations" ->
+        handle_locations(s, server_node)
       true ->
         IO.puts("Comando desconocido: #{cmd}")
         {:ok, s}
@@ -145,6 +159,14 @@ defmodule Taxi.CLI do
               {:ok, id} ->
                 IO.puts("Viaje creado con ID #{id}")
                 {:ok, s}
+              {:error, :invalid_origin} ->
+                {:error, "El origen '#{o}' no es válido. Usa 'locations' para ver opciones", s}
+              {:error, :invalid_destination} ->
+                {:error, "El destino '#{d}' no es válido", s}
+              {:error, :same_origin_destination} ->
+                {:error, "El origen y destino no pueden ser iguales", s}
+              {:error, :trip_already_exists} ->
+                {:error, "Ya tienes un viaje pendiente con ese origen/destino", s}
               {:error, reason} ->
                 {:error, "Error creando viaje: #{inspect(reason)}", s}
               {:badrpc, reason} ->
@@ -214,6 +236,55 @@ defmodule Taxi.CLI do
           IO.puts("#{u.username} (#{u.role}) → #{u.score}")
         end)
     end
+    {:ok, s}
+  end
+
+  defp handle_cancel_trip(cmd, s, server_node) do
+    if s == nil do
+      {:error, "No estás conectado", s}
+    else
+      trip_id = String.trim(String.replace_prefix(cmd, "cancel_trip ", ""))
+      case call_server(server_node, Taxi.Server, :cancel_trip, [trip_id, s]) do
+        {:ok, id} ->
+          IO.puts("Viaje #{id} cancelado (-3 puntos)")
+          {:ok, s}
+        {:error, :cannot_cancel} ->
+          {:error, "No puedes cancelar este viaje (ya está en progreso o no es tuyo)", s}
+        {:error, reason} ->
+          {:error, "Error: #{inspect(reason)}", s}
+        {:badrpc, reason} ->
+          {:error, "Error de conexión: #{inspect(reason)}", s}
+      end
+    end
+  end
+
+  defp handle_my_trips(s, server_node) do
+    if s == nil do
+      {:error, "No estás conectado", s}
+    else
+      trips = call_server(server_node, Taxi.Server, :my_trips, [s])
+      if Enum.empty?(trips) do
+        IO.puts("No tienes viajes activos")
+      else
+        IO.puts("\nTus viajes activos:")
+        Enum.each(trips, fn t ->
+          status_icon = case t["state"] do
+            :waiting -> "esperando"
+            :in_progress -> "en progreso"
+            _ -> "ok"
+          end
+          driver = t["driver"] || "esperando..."
+          IO.puts("#{status_icon} ID:#{t["id"]} | #{t["origin"]}→#{t["destination"]} | Conductor: #{driver}")
+        end)
+      end
+      {:ok, s}
+    end
+  end
+
+  defp handle_locations(s, server_node) do
+    locations = call_server(server_node, Taxi.Location, :list_locations, [])
+    IO.puts("\nUbicaciones disponibles:")
+    Enum.each(locations, fn loc -> IO.puts("  • #{loc}") end)
     {:ok, s}
   end
 

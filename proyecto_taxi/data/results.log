@@ -3,3 +3,5 @@
 2025-11-08 03:53:35.829000Z; cliente=Esteban06yt; conductor=none; origen=Aeropuerto; destino=Centro; status=Expirado
 2025-11-08 06:20:40.420000Z; cliente=Esteban06yt; conductor=Jaider; origen=Aeropuerto; destino=Centro; status=Completado2025-11-08 23:13:43.124000Z; cliente=Esteban06yt; conductor=Jaider; origen=Hospital; destino=Aeropuerto; status=Completado
 2025-11-08 23:17:19.237000Z; cliente=Matraz Trujillo; conductor=Pacho; origen=Hospital; destino=Parque; status=Completado
+2025-11-09 02:59:18.712000Z; cliente=Esteban06yt; conductor=none; origen=Aeropuerto; destino=Centro; status=Cancelado
+2025-11-09 03:02:51.872000Z; cliente=Fernely; conductor=none; origen=Hospital; destino=Centro; status=Expirado

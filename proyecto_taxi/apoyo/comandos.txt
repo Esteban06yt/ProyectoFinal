@@ -28,7 +28,6 @@ accept_trip
 
 TODO
     Usar :crypto para hash (p. ej. :crypto.hash(:sha256, password) |> Base.encode16()) o una librería especializada.
-    Solucionar request_trip
     Agregar mas destinos
     Puntaje separado para ranking de clientes y conductores
     Hacer que funcione en nodos remotos
