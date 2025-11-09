@@ -26,8 +26,16 @@ holotwist
 list_trips
 accept_trip
 
+cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
+iex --sname conductor2 -S mix
+Node.connect(:"server@Esteban06yt")
+Taxi.CLI.start()
+connect
+1
+Fernely
+akeno
+accept_trip
+
 TODO
-    Usar :crypto para hash (p. ej. :crypto.hash(:sha256, password) |> Base.encode16()) o una librería especializada.
     Agregar mas destinos
-    Puntaje separado para ranking de clientes y conductores
     Hacer que funcione en nodos remotos
