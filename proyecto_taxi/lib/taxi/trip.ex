@@ -143,5 +143,39 @@ defmodule Taxi.Trip do
   defp write_result(line) do
     File.mkdir_p!("data")
     File.write!("data/results.log", line, [:append])
+    write_json_result(line)
+  end
+
+  defp write_json_result(line) do
+    parts = String.split(line, "; ")
+
+    result_entry =
+      parts
+      |> Enum.reduce(%{}, fn part, acc ->
+        case String.split(part, "=", parts: 2) do
+          [key, value] ->
+            Map.put(acc, String.trim(key), String.trim(value))
+          [timestamp] ->
+            Map.put(acc, "timestamp", String.trim(timestamp))
+          _ ->
+            acc
+        end
+      end)
+
+    json_file = "data/results.json"
+
+    existing = case File.read(json_file) do
+      {:ok, content} ->
+        case Jason.decode(content) do
+          {:ok, list} when is_list(list) -> list
+          _ -> []
+        end
+      {:error, _} -> []
+    end
+
+    updated = existing ++ [result_entry]
+
+    json = Jason.encode!(updated, pretty: true)
+    File.write!(json_file, json)
   end
 end

@@ -13,3 +13,6 @@
 2025-11-09 06:29:28.084000Z; cliente=Esteban06yt; conductor=Jaider; origen=Aeropuerto; destino=Centro; status=Completado (Conductor: +20pts con bono)
 2025-11-09 06:29:37.049000Z; cliente=Esteban06yt; conductor=Jaider; origen=Aeropuerto; destino=Centro; status=Completado (Conductor: +20pts con bono)
 2025-11-09 06:29:49.536000Z; cliente=Esteban06yt; conductor=Jaider; origen=Aeropuerto; destino=Centro; status=Completado (Conductor: +25pts con bono)
+2025-11-10 05:05:18.026000Z; cliente=Esteban06yt; conductor=none; origen=Aeropuerto; destino=Centro; status=Cancelado
+2025-11-10 05:10:23.979000Z; cliente=Esteban06yt; conductor=none; origen=Aeropuerto; destino=Centro; status=Cancelado
+2025-11-10 05:16:57.924000Z; cliente=Esteban06yt; conductor=none; origen=Aeropuerto; destino=Centro; status=Cancelado

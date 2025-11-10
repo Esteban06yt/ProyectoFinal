@@ -1,6 +1,6 @@
 defmodule Taxi.UserManager do
   use GenServer
-  @users_file "data/users.dat"
+  @users_file "data/users.json"
 
   def start_link(_) do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
@@ -167,41 +167,93 @@ defmodule Taxi.UserManager do
   end
 
   defp persist_users(users_map) do
-    lines =
-      users_map
+    users_list = users_map
       |> Map.values()
       |> Enum.map(fn u ->
-        streak = Map.get(u, :streak, 0)
-        "#{u.username},#{u.role},#{u.password},#{u.score},#{streak}\n"
+        %{
+          "username" => u.username,
+          "role" => Atom.to_string(u.role),
+          "password" => u.password,
+          "score" => u.score,
+          "streak" => Map.get(u, :streak, 0)
+        }
       end)
-      |> Enum.join()
 
-    File.write!(@users_file, lines)
+    json = Jason.encode!(users_list, pretty: true)
+    File.write!(@users_file, json)
   end
 
   defp load_users do
     case File.read(@users_file) do
       {:ok, content} ->
-        content
-        |> String.split("\n", trim: true)
-        |> Enum.reduce(%{}, fn line, acc ->
-          line = String.trim(line)
+        content = String.trim(content)
 
-          case String.split(line, ",") do
-            [username, role_s, password, score_s] ->
-              role = String.to_atom(role_s)
-              score = String.to_integer(String.trim(score_s))
-              Map.put(acc, username, %{username: username, role: role, password: password, score: score, streak: 0})
+        cond do
+          content == "" ->
+            %{}
 
-            [username, role_s, password, score_s, streak_s] ->
-              role = String.to_atom(role_s)
-              score = String.to_integer(String.trim(score_s))
-              streak = String.to_integer(String.trim(streak_s))
-              Map.put(acc, username, %{username: username, role: role, password: password, score: score, streak: streak})
+          String.starts_with?(content, "[") or String.starts_with?(content, "{") ->
+            case Jason.decode(content) do
+              {:ok, users_list} when is_list(users_list) ->
+                users_list
+                |> Enum.reduce(%{}, fn user, acc ->
+                  username = user["username"]
+                  role = String.to_atom(user["role"])
+                  password = user["password"]
+                  score = user["score"] || 0
+                  streak = user["streak"] || 0
 
-            _ -> acc
-          end
-        end)
+                  Map.put(acc, username, %{
+                    username: username,
+                    role: role,
+                    password: password,
+                    score: score,
+                    streak: streak
+                  })
+                end)
+
+              _ ->
+                %{}
+            end
+
+          String.contains?(content, ",") ->
+            IO.puts("Detectado formato CSV antiguo en users.json, convirtiendo a JSON...")
+
+            users = content
+            |> String.split("\n", trim: true)
+            |> Enum.reduce(%{}, fn line, acc ->
+              line = String.trim(line)
+
+              case String.split(line, ",") do
+                [username, role_s, password, score_s] ->
+                  Map.put(acc, username, %{
+                    username: username,
+                    role: String.to_atom(role_s),
+                    password: password,
+                    score: String.to_integer(String.trim(score_s)),
+                    streak: 0
+                  })
+
+                [username, role_s, password, score_s, streak_s] ->
+                  Map.put(acc, username, %{
+                    username: username,
+                    role: String.to_atom(role_s),
+                    password: password,
+                    score: String.to_integer(String.trim(score_s)),
+                    streak: String.to_integer(String.trim(streak_s))
+                  })
+
+                _ -> acc
+              end
+            end)
+
+            persist_users(users)
+            IO.puts("Usuarios convertidos a JSON exitosamente")
+            users
+
+          true ->
+            %{}
+        end
 
       {:error, _} ->
         %{}

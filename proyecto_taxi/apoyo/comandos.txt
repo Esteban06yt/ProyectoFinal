@@ -14,6 +14,7 @@ connect
 Esteban06yt
 Esteban06yt
 request_trip origen=Aeropuerto destino=Centro
+cancel_trip
 
 cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
 iex --sname conductor1 -S mix
@@ -38,9 +39,3 @@ accept_trip
 TODO
     Hacer que funcione en nodos remotos
     un solo viaje a la vez
-         warning: this clause cannot match because a previous clause at line 116 matches the same pattern as this clause
-     │
- 125 │   def handle_call({:get_streak, username}, _from, users) do
-     │   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     │
-     └─ lib/taxi/user_manager.ex:125

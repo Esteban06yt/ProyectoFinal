@@ -25,7 +25,7 @@ defmodule Taxi.Location do
   end
 
   defp locations_file_path do
-    Path.join(@data_dir, "locations.dat")
+    Path.join(@data_dir, "locations.json")
   end
 
   defp load_locations do
@@ -33,15 +33,27 @@ defmodule Taxi.Location do
 
     case File.read(file) do
       {:ok, content} ->
-        content
-        |> String.split("\n", trim: true)
-        |> Enum.map(&String.trim/1)
+        case Jason.decode(content) do
+          {:ok, %{"locations" => locs}} when is_list(locs) ->
+            locs
 
-      _ ->
-        default = ["Parque", "Centro", "Aeropuerto", "Estacion", "Barrio"]
-        File.write!(file, Enum.join(default, "\n"))
-        default
+          {:ok, locs} when is_list(locs) ->
+            locs
+
+          _ ->
+            create_default_locations(file)
+        end
+
+      {:error, _} ->
+        create_default_locations(file)
     end
+  end
+
+  defp create_default_locations(file) do
+    default = ["Parque", "Centro", "Aeropuerto", "Estacion", "Barrio"]
+    json = Jason.encode!(%{"locations" => default}, pretty: true)
+    File.write!(file, json)
+    default
   end
 
   def handle_call({:valid, loc}, _from, locations) do
