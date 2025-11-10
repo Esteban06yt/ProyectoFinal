@@ -122,15 +122,6 @@ defmodule Taxi.UserManager do
     {:reply, streak, users}
   end
 
-  def handle_call({:get_streak, username}, _from, users) do
-    streak =
-      case Map.get(users, username) do
-        nil -> 0
-        user -> Map.get(user, :streak, 0)
-      end
-    {:reply, streak, users}
-  end
-
   def handle_call({:get_score, username}, _from, users) do
     score = users |> Map.get(username) |> (fn u -> if u, do: u.score, else: 0 end).()
     {:reply, score, users}
