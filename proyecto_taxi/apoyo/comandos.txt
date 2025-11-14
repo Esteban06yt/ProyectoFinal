@@ -29,3 +29,4 @@ TODO
     Hacer que funcione en nodos remotos
     Verificar contraseña valida
     Arreglar accept_trip cuando id no existe
+    Quitar results.log
