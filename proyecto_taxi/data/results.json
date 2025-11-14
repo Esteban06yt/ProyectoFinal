@@ -54,5 +54,13 @@
     "origen": "Iglesia",
     "status": "Cancelado",
     "timestamp": "2025-11-14 07:53:50.004000Z"
+  },
+  {
+    "cliente": "Esteban",
+    "conductor": "none",
+    "destino": "Iglesia",
+    "origen": "Gimnasio",
+    "status": "Expirado",
+    "timestamp": "2025-11-14 08:33:08.296000Z"
   }
 ]

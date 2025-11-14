@@ -91,6 +91,7 @@ defmodule Taxi.Trip do
     Logger.warning("Viaje #{s.id} expiró sin conductor")
     write_result("#{DateTime.utc_now()}; cliente=#{s.client}; conductor=none; origen=#{s.origin}; destino=#{s.destination}; status=Expirado\n")
     Taxi.UserManager.add_score(s.client, -5)
+    Taxi.UserManager.reset_streak(s.client)
     {:stop, :normal, %{s | state: :expired}}
   end
 
