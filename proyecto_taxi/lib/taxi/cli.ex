@@ -242,6 +242,8 @@ defmodule Taxi.CLI do
           {:ok, id} ->
             IO.puts("Aceptaste el viaje #{id}")
             {:ok, s}
+          {:error, :trip_not_found} ->
+            {:error, "El viaje #{trip_id} no existe o ya fue completado", s}
           {:error, :user_has_active_trip} ->
             {:error, "Ya tienes un viaje activo. Complétalo primero", s}
           {:error, reason} ->

@@ -34,16 +34,22 @@ defmodule Taxi.Server do
   end
 
   def accept_trip(_caller, trip_id, driver) do
-    if user_has_active_trip?(driver) do
-      {:error, :user_has_active_trip}
-    else
-      case Taxi.Trip.accept(trip_id, driver) do
-        {:ok, _} ->
-          {:ok, trip_id}
+    case Registry.lookup(Taxi.TripRegistry, trip_id) do
+      [] ->
+        {:error, :trip_not_found}
 
-        {:error, _} = e ->
-          e
-      end
+      [{_pid, _}] ->
+        if user_has_active_trip?(driver) do
+          {:error, :user_has_active_trip}
+        else
+          case Taxi.Trip.accept(trip_id, driver) do
+            {:ok, _} ->
+              {:ok, trip_id}
+
+            {:error, _} = e ->
+              e
+          end
+        end
     end
   end
 
