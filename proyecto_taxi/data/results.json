@@ -1,0 +1,50 @@
+[
+  {
+    "cliente": "Esteban06yt",
+    "conductor": "Jaider",
+    "destino": "Alcaldia",
+    "origen": "Fiscalia",
+    "status": "Completado",
+    "timestamp": "2025-11-14 07:21:07.287000Z"
+  },
+  {
+    "cliente": "Esteban06yt",
+    "conductor": "none",
+    "destino": "Cine",
+    "origen": "Cafeteria",
+    "status": "Cancelado",
+    "timestamp": "2025-11-14 07:23:08.803000Z"
+  },
+  {
+    "cliente": "Esteban06yt",
+    "conductor": "none",
+    "destino": "Zoologico",
+    "origen": "Museo",
+    "status": "Expirado",
+    "timestamp": "2025-11-14 07:24:18.865000Z"
+  },
+  {
+    "cliente": "Esteban06yt",
+    "conductor": "Jaider",
+    "destino": "Playa",
+    "origen": "Gasolinera",
+    "status": "Completado",
+    "timestamp": "2025-11-14 07:27:05.568000Z"
+  },
+  {
+    "cliente": "Esteban06yt",
+    "conductor": "none",
+    "destino": "Acuario",
+    "origen": "Aeropuerto",
+    "status": "Expirado",
+    "timestamp": "2025-11-14 07:31:56.348000Z"
+  },
+  {
+    "cliente": "Felipe",
+    "conductor": "Jaider",
+    "destino": "Museo",
+    "origen": "Aeropuerto",
+    "status": "Completado (Conductor: +20pts con bono)",
+    "timestamp": "2025-11-14 07:32:05.231000Z"
+  }
+]

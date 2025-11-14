@@ -16,6 +16,14 @@ defmodule Taxi.UserManager do
     GenServer.call(__MODULE__, {:auth_or_reg, username, role, password})
   end
 
+  def login(username, password) do
+    GenServer.call(__MODULE__, {:login, username, password})
+  end
+
+  def register(username, role, password) do
+    GenServer.call(__MODULE__, {:register, username, role, password})
+  end
+
   def add_score(username, delta) do
     GenServer.call(__MODULE__, {:add_score, username, delta})
   end
@@ -55,6 +63,10 @@ defmodule Taxi.UserManager do
     end
   end
 
+  def get_all_users do
+    GenServer.call(__MODULE__, :get_all_users)
+  end
+
   def handle_call({:auth_or_reg, username, role, password}, _from, users) do
     case Map.get(users, username) do
       nil ->
@@ -68,6 +80,32 @@ defmodule Taxi.UserManager do
 
       _ ->
         {:reply, {:error, :invalid_password}, users}
+    end
+  end
+
+  def handle_call({:login, username, password}, _from, users) do
+    case Map.get(users, username) do
+      nil ->
+        {:reply, {:error, :user_not_found}, users}
+
+      %{password: ^password} = user ->
+        {:reply, {:ok, user}, users}
+
+      _ ->
+        {:reply, {:error, :invalid_password}, users}
+    end
+  end
+
+  def handle_call({:register, username, role, password}, _from, users) do
+    case Map.get(users, username) do
+      nil ->
+        user = %{username: username, role: role, password: password, score: 0, streak: 0}
+        users2 = Map.put(users, username, user)
+        persist_users(users2)
+        {:reply, {:ok, user}, users2}
+
+      _ ->
+        {:reply, {:error, :user_already_exists}, users}
     end
   end
 
@@ -155,6 +193,10 @@ defmodule Taxi.UserManager do
         user -> user.role
       end
     {:reply, role, users}
+  end
+
+  def handle_call(:get_all_users, _from, users) do
+    {:reply, users, users}
   end
 
   defp calculate_bonus(streak) do

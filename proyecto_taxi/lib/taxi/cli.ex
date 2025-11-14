@@ -39,13 +39,16 @@ defmodule Taxi.CLI do
       list_trips              -> ver viajes disponibles
       my_trips                -> ver mis viajes activos
       accept_trip trip_id     (solo conductores)
-      my_score                -> ver mi puntaje
+      my_score / stats        -> ver mi puntaje y racha
       ranking                 -> ver ranking global
       ranking_clients         -> ver ranking de clientes
       ranking_drivers         -> ver ranking de conductores
       locations               -> ver ubicaciones disponibles
       help
       quit
+
+      Bonos por racha (conductores):
+       3 viajes -> +5 pts | 5 viajes -> +10 pts | 10 viajes -> +25 pts
     """)
     {:ok, s}
   end
@@ -91,7 +94,7 @@ defmodule Taxi.CLI do
       cmd == "my_trips" ->
         handle_my_trips(s, server_node)
 
-      cmd == "my_score" ->
+      cmd == "my_score" or cmd == "stats" ->
         handle_my_score(s, server_node)
 
       cmd == "ranking" ->
@@ -121,9 +124,14 @@ defmodule Taxi.CLI do
         IO.puts("Bienvenido de nuevo, #{user}")
         {:ok, username}
 
+      {:error, :user_not_found} ->
+        IO.puts("Usuario no encontrado.")
+        {:ok, nil}
+
       {:error, :invalid_password} ->
         IO.puts("Contraseña incorrecta.")
         {:ok, nil}
+
       {:badrpc, reason} ->
         IO.puts("Error de conexión con el servidor: #{inspect(reason)}")
         {:ok, nil}
@@ -149,9 +157,10 @@ defmodule Taxi.CLI do
         IO.puts("Cuenta creada y conectada como #{user}")
         {:ok, username}
 
-      {:error, :invalid_password} ->
-        IO.puts("Ya existe una cuenta con ese nombre y la contraseña no coincide.")
+      {:error, :user_already_exists} ->
+        IO.puts("Ya existe una cuenta con ese nombre.")
         {:ok, nil}
+
       {:badrpc, reason} ->
         IO.puts("Error de conexión: #{inspect(reason)}")
         {:ok, nil}
@@ -188,6 +197,9 @@ defmodule Taxi.CLI do
               {:error, :trip_already_exists} ->
                 {:error, "Ya tienes un viaje pendiente con ese origen/destino", s}
 
+              {:error, :user_has_active_trip} ->
+                {:error, "Ya tienes un viaje activo. Complétalo o cancélalo primero", s}
+
               {:error, reason} ->
                 {:error, "Error creando viaje: #{inspect(reason)}", s}
 
@@ -208,8 +220,9 @@ defmodule Taxi.CLI do
         if Enum.empty?(trips) do
           IO.puts("No hay viajes disponibles")
         else
+          IO.puts("\nViajes disponibles:")
           Enum.each(trips, fn t ->
-            IO.puts("id=#{t["id"]} | cliente=#{t["client"]} | #{t["origin"]}->#{t["destination"]}")
+            IO.puts("  ID: #{t["id"]} | Cliente: #{t["client"]} | #{t["origin"]} -> #{t["destination"]}")
           end)
         end
     end
@@ -229,6 +242,8 @@ defmodule Taxi.CLI do
           {:ok, id} ->
             IO.puts("Aceptaste el viaje #{id}")
             {:ok, s}
+          {:error, :user_has_active_trip} ->
+            {:error, "Ya tienes un viaje activo. Complétalo primero", s}
           {:error, reason} ->
             {:error, "No se pudo aceptar: #{inspect(reason)}", s}
           {:badrpc, reason} ->
@@ -270,8 +285,16 @@ defmodule Taxi.CLI do
       {:badrpc, reason} ->
         IO.puts("Error obteniendo ranking: #{inspect(reason)}")
       ranking when is_list(ranking) ->
-        Enum.each(ranking, fn u ->
-          IO.puts("#{u.username} (#{u.role}) -> #{u.score}")
+        IO.puts("\nRanking Global:")
+        Enum.with_index(ranking, 1) |> Enum.each(fn {u, pos} ->
+          emoji = case pos do
+            1 -> "1st"
+            2 -> "2nd"
+            3 -> "3rd"
+            _ -> "#{pos}."
+          end
+          role_emoji = if u.role == :driver, do: "driver", else: "client"
+          IO.puts("#{emoji} #{role_emoji} #{u.username} -> #{u.score} pts")
         end)
     end
     {:ok, s}

@@ -9,33 +9,23 @@ cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
 iex --sname cliente1 -S mix
 Node.connect(:"server@Esteban06yt")
 Taxi.CLI.start()
-connect
-1
-Esteban06yt
-Esteban06yt
-request_trip origen=Aeropuerto destino=Centro
-cancel_trip
+
+cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
+iex --sname cliente2 -S mix
+Node.connect(:"server@Esteban06yt")
+Taxi.CLI.start()
 
 cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
 iex --sname conductor1 -S mix
 Node.connect(:"server@Esteban06yt")
 Taxi.CLI.start()
-connect
-1
-Jaider
-holotwist
-accept_trip
 
 cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
 iex --sname conductor2 -S mix
 Node.connect(:"server@Esteban06yt")
 Taxi.CLI.start()
-connect
-1
-Fernely
-akeno
-accept_trip
 
 TODO
     Hacer que funcione en nodos remotos
-    un solo viaje a la vez
+    Verificar contraseña valida
+    Arreglar accept_trip cuando id no existe

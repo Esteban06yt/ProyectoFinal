@@ -1,9 +1,30 @@
 [
   {
-    "password": "Esteban06yt",
-    "role": "client",
+    "password": "Sprekk",
+    "role": "driver",
     "score": 0,
     "streak": 0,
+    "username": "Andres"
+  },
+  {
+    "password": "",
+    "role": "client",
+    "score": 7,
+    "streak": 0,
     "username": "Esteban06yt"
+  },
+  {
+    "password": "Fenrir",
+    "role": "client",
+    "score": 10,
+    "streak": 0,
+    "username": "Felipe"
+  },
+  {
+    "password": "HoloTwist",
+    "role": "driver",
+    "score": 50,
+    "streak": 3,
+    "username": "Jaider"
   }
 ]

@@ -11,7 +11,7 @@ defmodule Taxi.Server do
   end
 
   def connect(caller, username, role_str, password) do
-    role = parse_role(role_str)
+    role = if role_str, do: parse_role(role_str), else: nil
     GenServer.call(__MODULE__, {:connect, caller, username, role, password})
   end
 
@@ -34,12 +34,16 @@ defmodule Taxi.Server do
   end
 
   def accept_trip(_caller, trip_id, driver) do
-    case Taxi.Trip.accept(trip_id, driver) do
-      {:ok, _} ->
-        {:ok, trip_id}
+    if user_has_active_trip?(driver) do
+      {:error, :user_has_active_trip}
+    else
+      case Taxi.Trip.accept(trip_id, driver) do
+        {:ok, _} ->
+          {:ok, trip_id}
 
-      {:error, _} = e ->
-        e
+        {:error, _} = e ->
+          e
+      end
     end
   end
 
@@ -60,13 +64,33 @@ defmodule Taxi.Server do
   end
 
   def handle_call({:connect, caller, username, role, password}, _from, state) do
-    case Taxi.UserManager.authenticate_or_register(username, role, password) do
-      {:ok, _user} ->
-        sessions = Map.put(state.sessions, caller, username)
-        {:reply, {:ok, username}, %{state | sessions: sessions}}
+    all_users = Taxi.UserManager.get_all_users()
+    existing_user = Map.get(all_users, username)
 
-      {:error, :invalid_password} ->
-        {:reply, {:error, :invalid_password}, state}
+    case {role, existing_user} do
+      {nil, user} when not is_nil(user) ->
+        case Taxi.UserManager.login(username, password) do
+          {:ok, _} ->
+            sessions = Map.put(state.sessions, caller, username)
+            {:reply, {:ok, username}, %{state | sessions: sessions}}
+          {:error, reason} ->
+            {:reply, {:error, reason}, state}
+        end
+
+      {nil, nil} ->
+        {:reply, {:error, :user_not_found}, state}
+
+      {role, nil} when not is_nil(role) ->
+        case Taxi.UserManager.register(username, role, password) do
+          {:ok, _} ->
+            sessions = Map.put(state.sessions, caller, username)
+            {:reply, {:ok, username}, %{state | sessions: sessions}}
+          {:error, reason} ->
+            {:reply, {:error, reason}, state}
+        end
+
+      {_role, _user} ->
+        {:reply, {:error, :user_already_exists}, state}
     end
   end
 
@@ -88,6 +112,9 @@ defmodule Taxi.Server do
 
       String.downcase(norm_origin) == String.downcase(norm_destination) ->
         {:reply, {:error, :same_origin_destination}, state}
+
+      user_has_active_trip?(username) ->
+        {:reply, {:error, :user_has_active_trip}, state}
 
       trip_exists?(username, norm_origin, norm_destination) ->
         {:reply, {:error, :trip_already_exists}, state}
@@ -129,6 +156,21 @@ defmodule Taxi.Server do
       t["client"] == username or t["driver"] == username
     end)
     {:reply, trips, state}
+  end
+
+  defp user_has_active_trip?(username) do
+    Registry.select(Taxi.TripRegistry, [{{:"$1", :_, :_}, [], [:"$1"]}])
+    |> Enum.any?(fn id ->
+      try do
+        case Taxi.Trip.list_info(id) do
+          %{"client" => ^username, "state" => state} when state in [:waiting, :in_progress] -> true
+          %{"driver" => ^username, "state" => :in_progress} -> true
+          _ -> false
+        end
+      rescue
+        _ -> false
+      end
+    end)
   end
 
   defp trip_exists?(username, origin, destination) do
