@@ -46,5 +46,13 @@
     "origen": "Aeropuerto",
     "status": "Completado (Conductor: +20pts con bono)",
     "timestamp": "2025-11-14 07:32:05.231000Z"
+  },
+  {
+    "cliente": "Felipe",
+    "conductor": "none",
+    "destino": "Mercado",
+    "origen": "Iglesia",
+    "status": "Cancelado",
+    "timestamp": "2025-11-14 07:53:50.004000Z"
   }
 ]

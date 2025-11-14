@@ -28,4 +28,3 @@ Taxi.CLI.start()
 TODO
     Hacer que funcione en nodos remotos
     Verificar contraseña valida
-    Quitar results.log

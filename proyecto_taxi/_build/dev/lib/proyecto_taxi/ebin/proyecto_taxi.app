@@ -1,5 +1,5 @@
 {application,proyecto_taxi,
-             [{config_mtime,1763106204},
+             [{config_mtime,1763106669},
               {optional_applications,[]},
               {applications,[kernel,stdlib,elixir,logger,jason]},
               {description,"proyecto_taxi"},

@@ -142,7 +142,7 @@ defmodule Taxi.Trip do
 
   defp write_result(line) do
     File.mkdir_p!("data")
-    File.write!("data/results.log", line, [:append])
+    #File.write!("data/results.log", line, [:append])
     write_json_result(line)
   end
 

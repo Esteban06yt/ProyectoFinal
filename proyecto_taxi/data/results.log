@@ -1,6 +1,0 @@
-2025-11-14 07:21:07.287000Z; cliente=Esteban06yt; conductor=Jaider; origen=Fiscalia; destino=Alcaldia; status=Completado
-2025-11-14 07:23:08.803000Z; cliente=Esteban06yt; conductor=none; origen=Cafeteria; destino=Cine; status=Cancelado
-2025-11-14 07:24:18.865000Z; cliente=Esteban06yt; conductor=none; origen=Museo; destino=Zoologico; status=Expirado
-2025-11-14 07:27:05.568000Z; cliente=Esteban06yt; conductor=Jaider; origen=Gasolinera; destino=Playa; status=Completado
-2025-11-14 07:31:56.348000Z; cliente=Esteban06yt; conductor=none; origen=Aeropuerto; destino=Acuario; status=Expirado
-2025-11-14 07:32:05.231000Z; cliente=Felipe; conductor=Jaider; origen=Aeropuerto; destino=Museo; status=Completado (Conductor: +20pts con bono)
