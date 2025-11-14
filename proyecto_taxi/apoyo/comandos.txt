@@ -27,4 +27,7 @@ Taxi.CLI.start()
 
 TODO
     Hacer que funcione en nodos remotos
-    Verificar contraseña valida
+    Resetear racha si se pierde viaje
+    Encriptacio y/o ocultar contraseña
+    Reconexión automática si el servidor cae
+    Validación de que el servidor está realmente disponible antes de ejecutar comandos

@@ -117,53 +117,75 @@ defmodule Taxi.CLI do
 
   defp do_login(server_node) do
     username = IO.gets("Nombre de usuario: ") |> String.trim()
-    password = get_password("Contraseña: ")
 
-    case call_server(server_node, Taxi.Server, :connect, [self(), username, nil, password]) do
-      {:ok, user} ->
-        IO.puts("Bienvenido de nuevo, #{user}")
-        {:ok, username}
+    if username == "" do
+      IO.puts("El nombre de usuario no puede estar vacío.")
+      {:ok, nil}
+    else
+      password = get_password("Contraseña: ")
 
-      {:error, :user_not_found} ->
-        IO.puts("Usuario no encontrado.")
+      if String.trim(password) == "" do
+        IO.puts("La contraseña no puede estar vacía.")
         {:ok, nil}
+      else
+        case call_server(server_node, Taxi.Server, :connect, [self(), username, nil, password]) do
+          {:ok, user} ->
+            IO.puts("Bienvenido de nuevo, #{user}")
+            {:ok, username}
 
-      {:error, :invalid_password} ->
-        IO.puts("Contraseña incorrecta.")
-        {:ok, nil}
+          {:error, :user_not_found} ->
+            IO.puts("Usuario no encontrado.")
+            {:ok, nil}
 
-      {:badrpc, reason} ->
-        IO.puts("Error de conexión con el servidor: #{inspect(reason)}")
-        {:ok, nil}
+          {:error, :invalid_password} ->
+            IO.puts("Contraseña incorrecta.")
+            {:ok, nil}
+
+          {:badrpc, reason} ->
+            IO.puts("Error de conexión con el servidor: #{inspect(reason)}")
+            {:ok, nil}
+        end
+      end
     end
   end
 
   defp do_register(server_node) do
     username = IO.gets("Elige un nombre de usuario: ") |> String.trim()
-    password = get_password("Crea una contraseña: ")
 
-    IO.puts("Selecciona tu rol:")
-    IO.puts("1. Cliente")
-    IO.puts("2. Conductor")
-    role =
-      case IO.gets("> ") |> String.trim() do
-        "1" -> "cliente"
-        "2" -> "conductor"
-        _ -> "cliente"
+    if username == "" do
+      IO.puts("El nombre de usuario no puede estar vacío.")
+      {:ok, nil}
+    else
+
+      password = get_password_with_validation()
+
+      if password == nil do
+        {:ok, nil}
+      else
+        IO.puts("Selecciona tu rol:")
+        IO.puts("1. Cliente")
+        IO.puts("2. Conductor")
+        role =
+          case IO.gets("> ") |> String.trim() do
+            "1" -> "cliente"
+            "2" -> "conductor"
+            _ -> "cliente"
+          end
+
+        case call_server(server_node, Taxi.Server, :connect, [self(), username, role, password]) do
+          {:ok, user} ->
+            IO.puts("Cuenta creada y conectada como #{user}")
+            {:ok, username}
+
+          {:error, :user_already_exists} ->
+            IO.puts("Ya existe una cuenta con ese nombre.")
+            {:ok, nil}
+
+          {:badrpc, reason} ->
+            IO.puts("Error de conexión: #{inspect(reason)}")
+            {:ok, nil}
+        end
       end
-
-    case call_server(server_node, Taxi.Server, :connect, [self(), username, role, password]) do
-      {:ok, user} ->
-        IO.puts("Cuenta creada y conectada como #{user}")
-        {:ok, username}
-
-      {:error, :user_already_exists} ->
-        IO.puts("Ya existe una cuenta con ese nombre.")
-        {:ok, nil}
-
-      {:badrpc, reason} ->
-        IO.puts("Error de conexión: #{inspect(reason)}")
-        {:ok, nil}
     end
   end
 
@@ -375,6 +397,23 @@ defmodule Taxi.CLI do
   defp get_password(prompt) do
     IO.write(prompt)
     IO.gets("") |> String.trim()
+  end
+
+  defp get_password_with_validation do
+    password = get_password("Crea una contraseña: ")
+
+    cond do
+      String.trim(password) == "" ->
+        IO.puts("La contraseña no puede estar vacía. Intenta de nuevo.")
+        nil
+
+      String.length(password) < 4 ->
+        IO.puts("La contraseña debe tener al menos 4 caracteres. Intenta de nuevo.")
+        nil
+
+      true ->
+        password
+    end
   end
 
   defp parse_kv_args(str) do

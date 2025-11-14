@@ -26,5 +26,12 @@
     "score": 50,
     "streak": 3,
     "username": "Jaider"
+  },
+  {
+    "password": "Matraz",
+    "role": "driver",
+    "score": 0,
+    "streak": 0,
+    "username": "Trujillo"
   }
 ]
