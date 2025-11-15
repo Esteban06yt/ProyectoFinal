@@ -7,6 +7,13 @@
     "username": "Andres"
   },
   {
+    "password": "SeniorLemon",
+    "role": "client",
+    "score": 0,
+    "streak": 0,
+    "username": "Daniel"
+  },
+  {
     "password": "Esteban06yt",
     "role": "client",
     "score": 2,
@@ -26,6 +33,20 @@
     "score": 50,
     "streak": 3,
     "username": "Jaider"
+  },
+  {
+    "password": "Skaiso",
+    "role": "client",
+    "score": 0,
+    "streak": 0,
+    "username": "Juan"
+  },
+  {
+    "password": "Asrus",
+    "role": "driver",
+    "score": 0,
+    "streak": 0,
+    "username": "Nicolas"
   },
   {
     "password": "Matraz",

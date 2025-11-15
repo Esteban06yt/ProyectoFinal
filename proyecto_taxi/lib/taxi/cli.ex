@@ -396,7 +396,18 @@ defmodule Taxi.CLI do
 
   defp get_password(prompt) do
     IO.write(prompt)
-    IO.gets("") |> String.trim()
+
+    case :io.setopts(:standard_io, [echo: false]) do
+      :ok ->
+        password = IO.gets("") |> String.trim()
+        :io.setopts(:standard_io, [echo: true])
+        IO.write("\n")
+        password
+
+      {:error, _} ->
+        IO.write("[contraseña visible] ")
+        IO.gets("") |> String.trim()
+    end
   end
 
   defp get_password_with_validation do
