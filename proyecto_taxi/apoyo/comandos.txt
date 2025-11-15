@@ -27,4 +27,4 @@ Taxi.CLI.start()
 
 TODO
     Hacer que funcione en nodos remotos
-    Encriptacion y/o ocultar contraseña
+    Encriptacion contraseña

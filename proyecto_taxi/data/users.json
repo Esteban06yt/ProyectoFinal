@@ -28,6 +28,13 @@
     "username": "Felipe"
   },
   {
+    "password": "Akeno",
+    "role": "driver",
+    "score": 0,
+    "streak": 0,
+    "username": "Fernely"
+  },
+  {
     "password": "HoloTwist",
     "role": "driver",
     "score": 50,

@@ -395,16 +395,17 @@ defmodule Taxi.CLI do
   end
 
   defp get_password(prompt) do
-    IO.write(prompt)
-
     case :io.setopts(:standard_io, [echo: false]) do
       :ok ->
+        IO.puts("La contraseña estará oculta mientras escribes")
+        IO.write(prompt)
         password = IO.gets("") |> String.trim()
         :io.setopts(:standard_io, [echo: true])
         IO.write("\n")
         password
 
       {:error, _} ->
+        IO.write(prompt)
         IO.write("[contraseña visible] ")
         IO.gets("") |> String.trim()
     end
