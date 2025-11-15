@@ -3,7 +3,7 @@ defmodule Cookie do
   def main() do
     :crypto.strong_rand_bytes(@longitud_llave)
     |> Base.encode64()
-    |> Util.mostrar_mensaje()
+    |> IO.puts()
   end
 end
 
