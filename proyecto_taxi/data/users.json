@@ -49,6 +49,13 @@
     "username": "Juan"
   },
   {
+    "password": "Matraz",
+    "role": "driver",
+    "score": 0,
+    "streak": 0,
+    "username": "Matraz Trujillo"
+  },
+  {
     "password": "Asrus",
     "role": "driver",
     "score": 0,
@@ -56,10 +63,10 @@
     "username": "Nicolas"
   },
   {
-    "password": "Matraz",
+    "password": "Pacho",
     "role": "driver",
     "score": 0,
     "streak": 0,
-    "username": "Trujillo"
+    "username": "Pacho"
   }
 ]
