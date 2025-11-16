@@ -78,5 +78,13 @@
     "origen": "Parque",
     "status": "Expirado",
     "timestamp": "2025-11-16 06:15:14.746000Z"
+  },
+  {
+    "cliente": "Esteban",
+    "conductor": "Andres",
+    "destino": "Fiscalia",
+    "origen": "Museo",
+    "status": "Completado",
+    "timestamp": "2025-11-16 21:22:48.735000Z"
   }
 ]

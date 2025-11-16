@@ -2,8 +2,8 @@
   {
     "password": "Sprekk",
     "role": "driver",
-    "score": 0,
-    "streak": 0,
+    "score": 15,
+    "streak": 1,
     "username": "Andres"
   },
   {
@@ -16,7 +16,7 @@
   {
     "password": "Esteban06yt",
     "role": "client",
-    "score": 2,
+    "score": 12,
     "streak": 0,
     "username": "Esteban"
   },

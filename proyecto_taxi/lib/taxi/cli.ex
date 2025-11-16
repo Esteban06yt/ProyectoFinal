@@ -276,6 +276,12 @@ defmodule Taxi.CLI do
             {:ok, s}
           {:error, :trip_not_found} ->
             {:error, "El viaje #{trip_id} no existe o ya fue completado", s}
+          {:error, :already_accepted} ->
+            {:error, "Ese viaje ya fue aceptado por otro conductor", s}
+          {:error, :already_in_progress} ->
+            {:error, "Ese viaje ya está en progreso", s}
+          {:error, :trip_completed} ->
+            {:error, "Ese viaje ya fue completado", s}
           {:error, :user_has_active_trip} ->
             {:error, "Ya tienes un viaje activo. Complétalo primero", s}
           {:error, reason} ->

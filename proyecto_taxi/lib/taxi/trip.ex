@@ -64,16 +64,29 @@ defmodule Taxi.Trip do
   end
 
   def handle_call({:accept, driver}, _from, s = %__MODULE__{state: :waiting}) do
-    ref = make_ref()
-    Process.send_after(self(), {:finish, ref}, @trip_duration)
-    s2 = %{s | driver: driver, state: :in_progress, timer_ref: ref}
+    case s.driver do
+      nil ->
+        ref = make_ref()
+        Process.send_after(self(), {:finish, ref}, @trip_duration)
+        s2 = %{s | driver: driver, state: :in_progress, timer_ref: ref}
 
-    Logger.info("Viaje #{s2.id} aceptado por #{driver}, finalizará en #{@trip_duration}ms")
-    {:reply, {:ok, s2.id}, s2}
+        Logger.info("Viaje #{s2.id} aceptado por #{driver}, finalizará en #{@trip_duration}ms")
+        {:reply, {:ok, s2.id}, s2}
+
+    _already_assigned ->
+        Logger.warning("Viaje #{s.id} ya fue aceptado por otro conductor")
+        {:reply, {:error, :already_accepted}, s}
+    end
   end
 
   def handle_call({:accept, _driver}, _from, s) do
-    {:reply, {:error, :not_available}, s}
+    case s.state do
+      :in_progress -> {:reply, {:error, :already_in_progress}, s}
+      :completed -> {:reply, {:error, :trip_completed}, s}
+      :cancelled -> {:reply, {:error, :trip_cancelled}, s}
+      :expired -> {:reply, {:error, :trip_expired}, s}
+      _ -> {:reply, {:error, :not_available}, s}
+    end
   end
 
   def handle_call({:cancel, username}, _from, s = %__MODULE__{state: :waiting, client: username}) do
