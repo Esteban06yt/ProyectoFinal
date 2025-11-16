@@ -62,5 +62,21 @@
     "origen": "Gimnasio",
     "status": "Expirado",
     "timestamp": "2025-11-14 08:33:08.296000Z"
+  },
+  {
+    "cliente": "Linux",
+    "conductor": "none",
+    "destino": "Centro",
+    "origen": "Parque",
+    "status": "Cancelado",
+    "timestamp": "2025-11-16 06:14:26.317000Z"
+  },
+  {
+    "cliente": "Linux",
+    "conductor": "none",
+    "destino": "Hospital",
+    "origen": "Parque",
+    "status": "Expirado",
+    "timestamp": "2025-11-16 06:15:14.746000Z"
   }
 ]

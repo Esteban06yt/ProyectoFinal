@@ -1,19 +1,29 @@
 defmodule Taxi.CLI do
   def start do
-    server_node = detect_server_node()
+    server_node = System.get_env("TAXI_SERVER_NODE")
+                  |> parse_node_name()
+                  |> (&(&1 || detect_server_node())).()
+
     case server_node do
       nil ->
         IO.puts("No se encontró el nodo servidor")
-        IO.puts("Asegúrate de conectarte primero: Node.connect(:\"server@Esteban06yt\")")
+
       node when node == node() ->
         IO.puts("Ejecutando en nodo SERVIDOR")
+        IO.puts("Otros clientes pueden conectarse a: #{node}")
         IO.puts("Bienvenido al sistema Taxi CLI")
         loop(nil, node)
+
       node ->
         IO.puts("Conectado al servidor remoto: #{node}")
         IO.puts("Bienvenido al sistema Taxi CLI")
         loop(nil, node)
     end
+  end
+
+  defp parse_node_name(nil), do: nil
+  defp parse_node_name(node_str) when is_binary(node_str) do
+    String.to_atom(node_str)
   end
 
   defp loop(session_user, server_node) do

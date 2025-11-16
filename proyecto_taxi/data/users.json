@@ -49,6 +49,13 @@
     "username": "Juan"
   },
   {
+    "password": "Uwuntu",
+    "role": "client",
+    "score": -8,
+    "streak": 0,
+    "username": "Linux"
+  },
+  {
     "password": "Matraz",
     "role": "driver",
     "score": 0,

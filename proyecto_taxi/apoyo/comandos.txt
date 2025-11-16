@@ -1,30 +1,47 @@
 cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
 mix deps.get
 mix compile
-iex --sname server -S mix
+iex --sname server --cookie programacion3 -S mix
 Application.ensure_all_started(:proyecto_taxi)
 Taxi.CLI.start()
 
 cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
-iex --sname cliente1 -S mix
+iex --sname cliente1 --cookie programacion3 -S mix
 Node.connect(:"server@Esteban06yt")
 Taxi.CLI.start()
 
 cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
-iex --sname cliente2 -S mix
+iex --sname cliente2 --cookie programacion3 -S mix
 Node.connect(:"server@Esteban06yt")
 Taxi.CLI.start()
 
 cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
-iex --sname conductor1 -S mix
+iex --sname conductor1 --cookie programacion3 -S mix
 Node.connect(:"server@Esteban06yt")
 Taxi.CLI.start()
 
 cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
-iex --sname conductor2 -S mix
+iex --sname conductor2 --cookie programacion3 -S mix
 Node.connect(:"server@Esteban06yt")
 Taxi.CLI.start()
 
-TODO
-    Hacer que funcione en nodos remotos
-    Encriptacion contraseña
+cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
+mix deps.get
+mix compile
+iex --name server@192.168.1.14 --cookie programacion3 -S mix
+Application.ensure_all_started(:proyecto_taxi)
+Taxi.CLI.start()
+
+cd C:\Users\esteb\OneDrive\Documentos\Codigos\ProyectoFinal\proyecto_taxi
+iex --name cliente1@192.168.1.14 --cookie programacion3 -S mix
+Node.connect(:"server@192.168.1.14")
+Taxi.CLI.start()
+
+cd ~/proyectos/proyecto_taxi
+mix deps.get
+mix compile
+hostname -I
+iex --name cliente_wsl@172.21.144.231 --cookie programacion3 -S mix
+Node.connect(:"server@192.168.1.14")
+Node.list()
+Taxi.CLI.start()
